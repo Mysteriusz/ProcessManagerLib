@@ -1,5 +1,4 @@
 #pragma once
-//test
 
 #include "CpuInfo.h"
 #include "ProcessState.h"
