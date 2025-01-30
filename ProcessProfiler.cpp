@@ -124,10 +124,15 @@ std::vector<ProcessInfo> ProcessProfiler::GetAllProcesses() {
             {
                 ProcessInfo info;
 
-                info.SetName(GetProcessName(pe32.th32ProcessID));
-                info.SetUser(GetProcessUser(pe32.th32ProcessID));
-                info.SetImageName(GetProcessImageName(pe32.th32ProcessID));
-                info.SetPriority(GetProcessPriority(pe32.th32ProcessID));
+                const std::string& name = GetProcessName(pe32.th32ProcessID);
+                const std::string& user = GetProcessName(pe32.th32ProcessID);
+                const std::string& imageName = GetProcessName(pe32.th32ProcessID);
+                const std::string& priority = GetProcessName(pe32.th32ProcessID);
+
+                strcpy_s(info.name, name.length() + 1, name.c_str());
+                strcpy_s(info.user, user.length() + 1, user.c_str());
+                strcpy_s(info.imageName, imageName.length() + 1, imageName.c_str());
+                strcpy_s(info.priority, priority.length() + 1, priority.c_str());
 
                 info.pid = pe32.th32ProcessID;
 
