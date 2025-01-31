@@ -22,8 +22,17 @@
     <Filter Include="Source Files\Profilers\ProcessProfiler">
       <UniqueIdentifier>{388b1621-498e-4779-ac51-b3ebc450c283}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Structs">
-      <UniqueIdentifier>{7d086927-856f-44bd-957c-8ec5603201f5}</UniqueIdentifier>
+    <Filter Include="Source Files\Profilers\IOProfiler">
+      <UniqueIdentifier>{34c66ca0-4bfd-437c-9979-87fd4249d15f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Profilers\MemoryProfiler">
+      <UniqueIdentifier>{7719c76b-b5b0-43b0-86b2-4ddb4282fe8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Profilers\MemoryProfiler\Models">
+      <UniqueIdentifier>{3759378f-1349-4191-9eac-c58007c106da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Profilers\CpuProfiler\Models">
+      <UniqueIdentifier>{4a6fbc0a-8b93-4474-ad3f-295dfc2594cb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -42,20 +51,20 @@
     <ClCompile Include="Profiler.cpp">
       <Filter>Source Files\Profilers</Filter>
     </ClCompile>
+    <ClCompile Include="MemoryProfiler.cpp">
+      <Filter>Source Files\Profilers\MemoryProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryProfilerExtern.cpp">
+      <Filter>Source Files\Profilers\MemoryProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="IOProfiler.cpp">
+      <Filter>Source Files\Profilers\IOProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="IOProfilerExtern.cpp">
+      <Filter>Source Files\Profilers\IOProfiler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CpuProfiler.h">
-      <Filter>Source Files\Profilers\CpuProfiler</Filter>
-    </ClInclude>
-    <ClInclude Include="CpuInfo.h">
-      <Filter>Source Files\Structs</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessInfo.h">
-      <Filter>Source Files\Structs</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessState.h">
-      <Filter>Source Files\Structs</Filter>
-    </ClInclude>
     <ClInclude Include="ProcessProfiler.h">
       <Filter>Source Files\Profilers\ProcessProfiler</Filter>
     </ClInclude>
@@ -64,6 +73,33 @@
     </ClInclude>
     <ClInclude Include="ProfilerHelpers.h">
       <Filter>Source Files\Profilers</Filter>
+    </ClInclude>
+    <ClInclude Include="IOProfiler.h">
+      <Filter>Source Files\Profilers\IOProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessInfo.h">
+      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessState.h">
+      <Filter>Source Files\Profilers</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryProfiler.h">
+      <Filter>Source Files\Profilers\MemoryProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryInfo.h">
+      <Filter>Source Files\Profilers\MemoryProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="CpuInfo.h">
+      <Filter>Source Files\Profilers\CpuProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="CpuProfiler.h">
+      <Filter>Source Files\Profilers\CpuProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessCpuInfo.h">
+      <Filter>Source Files\Profilers\CpuProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessMemoryInfo.h">
+      <Filter>Source Files\Profilers\MemoryProfiler\Models</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -26,14 +26,14 @@ void CpuProfiler::InitializeProcessCpuProfiler(DWORD pid) {
     FILETIME ftime, fsys, fuser;
 
     GetSystemInfo(&sysInfo);
-    Profiler::processStates[pid].numProcessors = sysInfo.dwNumberOfProcessors;
+    Profiler::processStates[pid].cpuInfo.numProcessors = sysInfo.dwNumberOfProcessors;
 
     GetSystemTimeAsFileTime(&ftime);
-    memcpy(&Profiler::processStates[pid].lastCPU, &ftime, sizeof(FILETIME));
+    memcpy(&Profiler::processStates[pid].cpuInfo.lastCPU, &ftime, sizeof(FILETIME));
 
     GetProcessTimes(pHandle, &ftime, &ftime, &fsys, &fuser);
-    memcpy(&Profiler::processStates[pid].lastSysCPU, &fsys, sizeof(FILETIME));
-    memcpy(&Profiler::processStates[pid].lastUserCPU, &fuser, sizeof(FILETIME));
+    memcpy(&Profiler::processStates[pid].cpuInfo.lastSysCPU, &fsys, sizeof(FILETIME));
+    memcpy(&Profiler::processStates[pid].cpuInfo.lastUserCPU, &fuser, sizeof(FILETIME));
 }
 
 double CpuProfiler::GetCpuUsage() {
@@ -44,11 +44,11 @@ double CpuProfiler::GetCpuUsage() {
     return counterVal.doubleValue;
 }
 double CpuProfiler::GetProcessCpuUsage(DWORD pid) {
+    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+
     FILETIME ftime, fsys, fuser;
     ULARGE_INTEGER now, sys, user;
     double percent;
-
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
 
     GetSystemTimeAsFileTime(&ftime);
     memcpy(&now, &ftime, sizeof(FILETIME));
@@ -56,15 +56,32 @@ double CpuProfiler::GetProcessCpuUsage(DWORD pid) {
     GetProcessTimes(pHandle, &ftime, &ftime, &fsys, &fuser);
     memcpy(&sys, &fsys, sizeof(FILETIME));
     memcpy(&user, &fuser, sizeof(FILETIME));
-    percent = (sys.QuadPart - Profiler::processStates[pid].lastSysCPU.QuadPart) +
-        (user.QuadPart - Profiler::processStates[pid].lastUserCPU.QuadPart);
+    percent = (sys.QuadPart - Profiler::processStates[pid].cpuInfo.lastSysCPU.QuadPart) +
+        (user.QuadPart - Profiler::processStates[pid].cpuInfo.lastUserCPU.QuadPart);
 
-    percent /= (now.QuadPart - Profiler::processStates[pid].lastCPU.QuadPart);
-    percent /= Profiler::processStates[pid].numProcessors;
+    percent /= (now.QuadPart - Profiler::processStates[pid].cpuInfo.lastCPU.QuadPart);
+    percent /= Profiler::processStates[pid].cpuInfo.numProcessors;
     
-    Profiler::processStates[pid].lastCPU = now;
-    Profiler::processStates[pid].lastUserCPU = user;
-    Profiler::processStates[pid].lastSysCPU = sys;
+    Profiler::processStates[pid].cpuInfo.lastCPU = now;
+    Profiler::processStates[pid].cpuInfo.lastUserCPU = user;
+    Profiler::processStates[pid].cpuInfo.lastSysCPU = sys;
 
     return percent * 100;
+}
+
+CpuInfo CpuProfiler::GetCpuInfo() {
+    CpuInfo ci;
+
+    InitializeCpuProfiler();
+    ci.cpuSysUsage = GetCpuUsage();
+
+    return ci;
+}
+ProcessCpuInfo CpuProfiler::GetProcessCpuInfo(DWORD pid) {
+    ProcessCpuInfo pci;
+    
+    InitializeProcessCpuProfiler(pid);
+    pci.usagePercent = GetProcessCpuUsage(pid);
+
+    return pci;
 }

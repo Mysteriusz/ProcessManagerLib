@@ -22,6 +22,9 @@ namespace ProfilingLib::Profilers {
 
 		double GetCpuUsage();
 		double GetProcessCpuUsage(DWORD pid);
+
+		CpuInfo GetCpuInfo();
+		ProcessCpuInfo GetProcessCpuInfo(DWORD pid);
 	private:
 		PDH_HQUERY query = nullptr;
 		PDH_HCOUNTER counter = nullptr;
