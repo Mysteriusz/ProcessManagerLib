@@ -13,14 +13,25 @@
 #include "ntstatus.h"
 #include "winbase.h"
 #include "winver.h"
+#include "Winternl.h"
+#include <sstream>
 #include <filesystem>
-#include <Winternl.h>
+#include <memory>
+#include <codecvt>
 
 #pragma comment(lib, "Version.lib")
 
 using namespace ProfilingLib::Profilers;
 
-std::string ProcessProfiler::GetProcessName(DWORD& pid) {
+typedef NTSTATUS(NTAPI* _NtQueryInformationProcess)(
+    HANDLE ProcessHandle,
+    DWORD ProcessInformationClass,
+    PVOID ProcessInformation,
+    DWORD ProcessInformationLength,
+    PDWORD ReturnLength
+);
+
+std::string ProcessProfiler::GetProcessName(UINT& pid) {
     wchar_t processName[MAX_PATH] = { 0 };
     PDWORD plen = new DWORD(MAX_PATH);
 
@@ -37,7 +48,7 @@ std::string ProcessProfiler::GetProcessName(DWORD& pid) {
 
     return std::filesystem::path(processName).filename().string();
 }
-std::string ProcessProfiler::GetProcessImageName(DWORD& pid) {
+std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
     wchar_t processName[MAX_PATH] = { 0 };  
     PDWORD plen = new DWORD(MAX_PATH);
 
@@ -60,7 +71,7 @@ std::string ProcessProfiler::GetProcessImageName(DWORD& pid) {
     
     return multiStr;
 }
-std::string ProcessProfiler::GetProcessUser(DWORD& pid) {
+std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     HANDLE pHandle = Profiler::GetProcessHandle(pid);
 
     HANDLE hToken;
@@ -107,7 +118,7 @@ std::string ProcessProfiler::GetProcessUser(DWORD& pid) {
     WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &multiStr[0], len, nullptr, nullptr);
     return multiStr;
 }
-std::string ProcessProfiler::GetProcessPriority(DWORD& pid) {
+std::string ProcessProfiler::GetProcessPriority(UINT& pid) {
     HANDLE pHandle = Profiler::GetProcessHandle(pid);
 
     switch (GetPriorityClass(pHandle)) {
@@ -127,7 +138,7 @@ std::string ProcessProfiler::GetProcessPriority(DWORD& pid) {
             return "0 N/A";
     }
 }
-std::string ProcessProfiler::GetProcessFileVersion(DWORD& pid) {
+std::string ProcessProfiler::GetProcessFileVersion(UINT& pid) {
     std::string imageName = Profiler::processProfiler.GetProcessImageName(pid);
     LPSTR processPath = const_cast<LPSTR>(imageName.c_str());
 
@@ -160,7 +171,7 @@ std::string ProcessProfiler::GetProcessFileVersion(DWORD& pid) {
     delete[] buffer;
     return ver;
 }
-std::string ProcessProfiler::GetProcessArchitectureType(DWORD& pid) {
+std::string ProcessProfiler::GetProcessArchitectureType(UINT& pid) {
     HANDLE pHandle = Profiler::GetProcessHandle(pid);
     BOOL isWow64 = FALSE;
 
@@ -173,7 +184,7 @@ std::string ProcessProfiler::GetProcessArchitectureType(DWORD& pid) {
     else
         return "ARM";
 }
-std::string ProcessProfiler::GetProcessIntegrityLevel(DWORD& pid) {
+std::string ProcessProfiler::GetProcessIntegrityLevel(UINT& pid) {
     HANDLE pHandle = Profiler::GetProcessHandle(pid);
     
     HANDLE hToken;
@@ -212,8 +223,64 @@ std::string ProcessProfiler::GetProcessIntegrityLevel(DWORD& pid) {
             return "Unknown Integrity Level";
     }
 }
+std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
-DWORD ProcessProfiler::GetProcessPPID(DWORD& pid) {
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    if (ntdll == NULL) return "0 N/A";
+
+    _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
+    if (NtQueryInformationProcess == NULL) return "1 N/A";
+
+    PROCESS_BASIC_INFORMATION pbi;
+    NTSTATUS s = NtQueryInformationProcess(pHandle, 0, &pbi, sizeof(pbi), NULL);
+    if (s != 0) return "2 N/A";
+
+    PEB peb;
+    if (!ReadProcessMemory(pHandle, pbi.PebBaseAddress, &peb, sizeof(PEB), NULL))
+        return "3 N/A" + std::to_string(GetLastError());
+
+    RTL_USER_PROCESS_PARAMETERS params;
+    if (!ReadProcessMemory(pHandle, peb.ProcessParameters, &params, sizeof(RTL_USER_PROCESS_PARAMETERS), NULL)) {
+        return "4 N/A " + std::to_string(GetLastError());
+    }
+
+    UNICODE_STRING str = params.CommandLine;
+    WCHAR* buffer = new WCHAR[(str.Length / 2) + 1]();
+
+    if (!ReadProcessMemory(pHandle, str.Buffer, buffer, str.Length, NULL)) {
+        delete[] buffer;
+        return "5 N/A";
+    }
+
+    std::wstring wstr(buffer);
+
+    int len = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    std::string multiStr(len, 0);
+    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, &multiStr[0], len, nullptr, nullptr);
+    
+    delete[] buffer;
+    CloseHandle(pHandle);
+
+    return multiStr;
+}
+
+UINT64 ProcessProfiler::GetProcessPEB(UINT& pid) {
+    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    if (ntdll == NULL) return 0;
+
+    _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
+    if (NtQueryInformationProcess == NULL) return 0;
+
+    PROCESS_BASIC_INFORMATION pbi;
+
+    NtQueryInformationProcess(pHandle, 0, &pbi, sizeof(pbi), NULL);
+
+    return reinterpret_cast<UINT64>(pbi.PebBaseAddress);
+}
+UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot != INVALID_HANDLE_VALUE)
     {
@@ -226,13 +293,13 @@ DWORD ProcessProfiler::GetProcessPPID(DWORD& pid) {
                     return pe32.th32ParentProcessID;
             }
 
-            return 0;
         }
         CloseHandle(snapshot);
     }
+    return 0;
 }
 
-std::vector<FILETIME> ProcessProfiler::GetProcessCurrentTimes(DWORD& pid) {
+std::vector<FILETIME> ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
     HANDLE pHandle = Profiler::GetProcessHandle(pid);
     FILETIME creationTime, exitTime, kernelTime, userTime;
     std::vector<FILETIME> processTimes;
@@ -263,7 +330,7 @@ std::vector<FILETIME> ProcessProfiler::GetProcessCurrentTimes(DWORD& pid) {
     return processTimes;
 }
 
-ProcessInfo ProcessProfiler::GetProcessInfo(DWORD& pid) {
+ProcessInfo ProcessProfiler::GetProcessInfo(UINT& pid) {
     ProcessInfo info;
     
     HMODULE hNtdll = LoadLibraryW(L"ntdll.dll");
@@ -275,8 +342,10 @@ ProcessInfo ProcessProfiler::GetProcessInfo(DWORD& pid) {
     const std::string& fileVersion = GetProcessFileVersion(pid);
     const std::string& architectureType = GetProcessArchitectureType(pid);
     const std::string& integrityLevel = GetProcessIntegrityLevel(pid);
+    const std::string& cmd = GetProcessCommandLine(pid);
     const std::vector<FILETIME> times = GetProcessCurrentTimes(pid);
     const UINT ppid = GetProcessPPID(pid);
+    const UINT64 peb = GetProcessPEB(pid);
 
     strcpy_s(info.name, name.length() + 1, name.c_str());
     strcpy_s(info.user, user.length() + 1, user.c_str());
@@ -285,6 +354,7 @@ ProcessInfo ProcessProfiler::GetProcessInfo(DWORD& pid) {
     strcpy_s(info.fileVersion, fileVersion.length() + 1, fileVersion.c_str());
     strcpy_s(info.architectureType, architectureType.length() + 1, architectureType.c_str());
     strcpy_s(info.integrityLevel, integrityLevel.length() + 1, integrityLevel.c_str());
+    strcpy_s(info.cmd, cmd.length() + 1, cmd.c_str());
 
     info.creationTime = times[0];
     info.userTime = times[1];
@@ -294,6 +364,7 @@ ProcessInfo ProcessProfiler::GetProcessInfo(DWORD& pid) {
     
     info.ppid = ppid;
     info.pid = pid;
+    info.peb = peb;
 
     return info;
 }
@@ -308,7 +379,7 @@ std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo() {
         {
             while (Process32Next(snapshot, &pe32))
             {
-                ProcessInfo info = GetProcessInfo(pe32.th32ProcessID);
+                ProcessInfo info = GetProcessInfo((UINT&)pe32.th32ProcessID);
                 infos.push_back(info);
             }
         }

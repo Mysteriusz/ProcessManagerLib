@@ -13,9 +13,11 @@ struct ProcessInfo {
     char* fileVersion = new char[64];
     char* integrityLevel = new char[64];
     char* architectureType = new char[16];
+    char* cmd = new char[4096];
 
     UINT pid = 0;
     UINT ppid = 0;
+    UINT64 peb = 0;
 
     FILETIME creationTime = {0};
     FILETIME kernelTime = {0};

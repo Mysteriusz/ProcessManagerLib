@@ -2,7 +2,6 @@
 
 // STRUCTS
 #include "ProcessHolder.h"
-#include "CpuInfo.h"
 #include "ProcessInfo.h"
 
 // LIBS

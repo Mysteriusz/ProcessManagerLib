@@ -15,19 +15,21 @@
 namespace ProfilingLib::Profilers {
 	class ProcessProfiler {
 	public:
-		std::string GetProcessName(DWORD& pid);
-		std::string GetProcessImageName(DWORD& pid);
-		std::string GetProcessUser(DWORD& pid);
-		std::string GetProcessPriority(DWORD& pid);
-		std::string GetProcessFileVersion(DWORD& pid);
-		std::string GetProcessArchitectureType(DWORD& pid);
-		std::string GetProcessIntegrityLevel(DWORD& pid);
+		std::string GetProcessName(UINT& pid);
+		std::string GetProcessImageName(UINT& pid);
+		std::string GetProcessUser(UINT& pid);
+		std::string GetProcessPriority(UINT& pid);
+		std::string GetProcessFileVersion(UINT& pid);
+		std::string GetProcessArchitectureType(UINT& pid);
+		std::string GetProcessIntegrityLevel(UINT& pid);
+		std::string GetProcessCommandLine(UINT& pid);
 
-		DWORD GetProcessPPID(DWORD& pid);
+		UINT64 GetProcessPEB(UINT& pid);
+		UINT GetProcessPPID(UINT& pid);
 
-		std::vector<FILETIME> GetProcessCurrentTimes(DWORD& pid);
+		std::vector<FILETIME> GetProcessCurrentTimes(UINT& pid);
 		
-		ProcessInfo GetProcessInfo(DWORD& pid);
+		ProcessInfo GetProcessInfo(UINT& pid);
 		std::vector<ProcessInfo> GetAllProcessInfo();
 	};
 }

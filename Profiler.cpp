@@ -2,12 +2,9 @@
 
 // PROFILERS
 #include "ProcessProfiler.h"
-#include "MemoryProfiler.h"
-#include "CpuProfiler.h"
 #include "Profiler.h"
 
 // STRUCTS
-#include "CpuInfo.h"
 
 // LIBS
 #include <unordered_map>
@@ -15,7 +12,6 @@
 using namespace ProfilingLib::Profilers;
 
 ProcessProfiler Profiler::processProfiler;
-CpuProfiler Profiler::cpuProfiler;
 std::unordered_map<DWORD, ProcessHolder> Profiler::processStates;
 
 HANDLE Profiler::AddNewProcess(DWORD pid) {
