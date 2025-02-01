@@ -1,12 +1,14 @@
 #pragma once
 #define CPU_PROFILER_H
 
-#include "ProcessInfo.h"
-#include "CpuInfo.h"
-#include "ProcessState.h"
-
+// PROFILERS
 #include "Profiler.h"
 
+// STRUCTS
+#include "ProcessInfo.h"
+#include "CpuInfo.h"
+
+// LIBS
 #include "windows.h"
 #include "string.h"
 #include "TCHAR.h"
@@ -18,13 +20,10 @@ namespace ProfilingLib::Profilers {
 	class CpuProfiler {
 	public:
 		void InitializeCpuProfiler();
-		void InitializeProcessCpuProfiler(DWORD pid);
 
 		double GetCpuUsage();
-		double GetProcessCpuUsage(DWORD pid);
 
 		CpuInfo GetCpuInfo();
-		ProcessCpuInfo GetProcessCpuInfo(DWORD pid);
 	private:
 		PDH_HQUERY query = nullptr;
 		PDH_HCOUNTER counter = nullptr;

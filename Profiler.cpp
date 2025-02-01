@@ -1,22 +1,25 @@
 #pragma once
 
-#include "CpuInfo.h"
-#include "ProcessState.h"
-
+// PROFILERS
 #include "ProcessProfiler.h"
+#include "MemoryProfiler.h"
 #include "CpuProfiler.h"
 #include "Profiler.h"
 
+// STRUCTS
+#include "CpuInfo.h"
+
+// LIBS
 #include <unordered_map>
 
 using namespace ProfilingLib::Profilers;
 
 ProcessProfiler Profiler::processProfiler;
 CpuProfiler Profiler::cpuProfiler;
-std::unordered_map<DWORD, ProcessState> Profiler::processStates;
+std::unordered_map<DWORD, ProcessHolder> Profiler::processStates;
 
 HANDLE Profiler::AddNewProcess(DWORD pid) {
-    ProcessState state;
+	ProcessHolder state;
 
     state.pHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
 

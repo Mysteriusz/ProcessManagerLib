@@ -1,6 +1,7 @@
 #ifndef P_CPU_INFO_H
 #define P_CPU_INFO_H
 
+// LIBS
 #include "Windows.h"
 
 struct ProcessCpuInfo {

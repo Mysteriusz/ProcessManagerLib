@@ -6,6 +6,9 @@
 
 struct ProcessMemoryInfo {
     PROCESS_MEMORY_COUNTERS_EX pmc;
+
+    DWORDLONG physMemUsage;
+    DWORDLONG virtMemUsage;
 };
 
 #endif 

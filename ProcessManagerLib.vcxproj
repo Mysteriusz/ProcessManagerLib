@@ -19,29 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CpuProfiler.cpp" />
-    <ClCompile Include="CpuProfilerExtern.cpp" />
-    <ClCompile Include="IOProfiler.cpp" />
-    <ClCompile Include="IOProfilerExtern.cpp" />
-    <ClCompile Include="MemoryProfiler.cpp" />
-    <ClCompile Include="MemoryProfilerExtern.cpp" />
     <ClCompile Include="ProcessProfiler.cpp" />
     <ClCompile Include="ProcessProfilerExtern.cpp" />
     <ClCompile Include="Profiler.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CpuInfo.h" />
-    <ClInclude Include="CpuProfiler.h" />
-    <ClInclude Include="IOProfiler.h" />
-    <ClInclude Include="MemoryInfo.h" />
-    <ClInclude Include="MemoryProfiler.h" />
-    <ClInclude Include="ProcessCpuInfo.h" />
+    <ClInclude Include="ProcessHolder.h" />
     <ClInclude Include="ProcessInfo.h" />
-    <ClInclude Include="ProcessMemoryInfo.h" />
     <ClInclude Include="ProcessProfiler.h" />
-    <ClInclude Include="ProcessState.h" />
     <ClInclude Include="Profiler.h" />
-    <ClInclude Include="ProfilerHelpers.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
