@@ -15,6 +15,8 @@ namespace ProfilingLib::Profilers {
 	public:
 		static HANDLE AddNewProcess(DWORD pid);
 		static HANDLE GetProcessHandle(DWORD pid);
+		
+		static BOOL EnableDebugPrivilages();
 
 		static std::string WideStringToString(std::wstring& str);
 		static std::wstring StringToWideString(std::string& str);

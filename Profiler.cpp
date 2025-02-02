@@ -45,3 +45,34 @@ std::wstring Profiler::StringToWideString(std::string& str) {
 
     return widestr;
 }
+
+BOOL Profiler::EnableDebugPrivilages() {
+    HANDLE hToken;
+    LUID luid;
+    TOKEN_PRIVILEGES tp;
+
+    // Open current process token
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+        return false;
+    }
+
+    // Get LUID for SeDebugPrivilege
+    if (!LookupPrivilegeValue(nullptr, SE_DEBUG_NAME, &luid)) {
+        CloseHandle(hToken);
+        return false;
+    }
+
+    // Set up privilege adjustment
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Luid = luid;
+    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    // Adjust token privileges
+    if (!AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), nullptr, nullptr)) {
+        CloseHandle(hToken);
+        return false;
+    }
+
+    CloseHandle(hToken);
+    return true;
+}

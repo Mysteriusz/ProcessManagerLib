@@ -37,11 +37,15 @@ std::string ProcessProfiler::GetProcessName(UINT& pid) {
             QueryFullProcessImageName(pHandle, PROCESS_NAME_NATIVE, processName, plen);
         }
         else {
-            return "0 N/A";
+            return "N/A";
         }
     }
 
     return std::filesystem::path(processName).filename().string();
+}
+std::string ProcessProfiler::GetProcessParentName(UINT& pid) {
+    UINT pPid = GetProcessPPID(pid);
+    return GetProcessName(pPid);
 }
 std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
     wchar_t processName[MAX_PATH] = { 0 };  
@@ -54,7 +58,7 @@ std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
             QueryFullProcessImageName(pHandle, PROCESS_NAME_NATIVE, processName, plen);
         }
         else {
-            return "1 N/A";
+            return "N/A";
         }
     }
 
@@ -72,7 +76,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     }
 
     if (!OpenProcessToken(pHandle, TOKEN_QUERY, &hToken)) {
-        return "0 N/A";
+        return "N/A";
     }
 
     DWORD hTokenSize = 0;
@@ -80,7 +84,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!GetTokenInformation(hToken, TokenUser, NULL, 0, &hTokenSize)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
-            return "1 N/A";
+            return "N/A";
         }
     }
 
@@ -89,7 +93,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!GetTokenInformation(hToken, TokenUser, buffer, hTokenSize, &hTokenSize)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
-            return "2 N/A";
+            return "N/A";
         }
     }
 
@@ -103,7 +107,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!LookupAccountSid(NULL, pSid, NULL, &nameSize, NULL, &domainSize, &sidName)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
-            return "3 N/A";
+            return "N/A";
         }
     }
 
@@ -113,7 +117,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!LookupAccountSid(NULL, pSid, name, &nameSize, domain, &domainSize, &sidName)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
-            return "4 N/A";
+            return "N/A";
         }
     }
 
@@ -141,7 +145,7 @@ std::string ProcessProfiler::GetProcessPriority(UINT& pid) {
         case 0x00000040:
             return "Idle";
         default:
-            return "0 N/A";
+            return "N/A";
     }
 }
 std::string ProcessProfiler::GetProcessFileVersion(UINT& pid) {
@@ -153,18 +157,18 @@ std::string ProcessProfiler::GetProcessFileVersion(UINT& pid) {
 
     DWORD size = GetFileVersionInfoSize(imgNameW.c_str(), NULL);
     if (size == 0) {
-        return "0 N/A";
+        return "N/A";
     }
     buffer = new BYTE[size];
     if (!GetFileVersionInfo(imgNameW.c_str(), 0, size, buffer)) {
         delete[] buffer;
-        return "1 N/A";
+        return "N/A";
     }
     LPVOID lpBuffer;
     UINT lpLen;
     if (!VerQueryValue(buffer, L"", &lpBuffer, &lpLen)) {
         delete[] buffer;
-        return "2 N/A";
+        return "N/A";
     }
 
     VS_FIXEDFILEINFO* verInfo = (VS_FIXEDFILEINFO*)lpBuffer;
@@ -201,13 +205,13 @@ std::string ProcessProfiler::GetProcessIntegrityLevel(UINT& pid) {
     }
 
     if (!OpenProcessToken(pHandle, TOKEN_QUERY, &hToken)) {
-        return "0 N/A";
+        return "N/A";
     }
 
     if (!GetTokenInformation(hToken, TokenIntegrityLevel, NULL, 0, &hTokenSize)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
-            return "1 N/A";
+            return "N/A";
         }
     }
     
@@ -216,7 +220,7 @@ std::string ProcessProfiler::GetProcessIntegrityLevel(UINT& pid) {
     if (!GetTokenInformation(hToken, TokenIntegrityLevel, tml, hTokenSize, &hTokenSize)) {
         free(tml);
         CloseHandle(hToken);
-        return "2 N/A";
+        return "N/A";
     }
 
     DWORD intLevel = *GetSidSubAuthority(tml->Label.Sid, (DWORD)(*GetSidSubAuthorityCount(tml->Label.Sid) - 1));
@@ -239,22 +243,22 @@ std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
     HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
-    if (ntdll == NULL) return "0 N/A";
+    if (ntdll == NULL) return "N/A";
 
     _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
-    if (NtQueryInformationProcess == NULL) return "1 N/A";
+    if (NtQueryInformationProcess == NULL) return "N/A";
 
     PROCESS_BASIC_INFORMATION pbi;
     NTSTATUS s = NtQueryInformationProcess(pHandle, 0, &pbi, sizeof(pbi), NULL);
-    if (s != 0) return "2 N/A";
+    if (s != 0) return "N/A";
 
     PEB peb;
     if (!ReadProcessMemory(pHandle, pbi.PebBaseAddress, &peb, sizeof(PEB), NULL))
-        return "3 N/A";
+        return "N/A";
 
-    RTL_USER_PROCESS_PARAMETERS params;
-    if (!ReadProcessMemory(pHandle, peb.ProcessParameters, &params, sizeof(RTL_USER_PROCESS_PARAMETERS), NULL)) {
-        return "4 N/A";
+    NTTYPES_RTL_USER_PROCESS_PARAMETERS params;
+    if (!ReadProcessMemory(pHandle, peb.ProcessParameters, &params, sizeof(NTTYPES_RTL_USER_PROCESS_PARAMETERS), NULL)) {
+        return "N/A";
     }
 
     UNICODE_STRING cmdStr = params.CommandLine;
@@ -262,7 +266,7 @@ std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
 
     if (!ReadProcessMemory(pHandle, cmdStr.Buffer, buffer, cmdStr.Length, NULL)) {
         delete[] buffer;
-        return "5 N/A";
+        return "N/A";
     }
 
     std::wstring wstr(buffer);
@@ -271,7 +275,7 @@ std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
     delete[] buffer;
     CloseHandle(pHandle);
 
-    return "str";
+    return str;
 }
 std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
     std::string imgName = GetProcessImageName(pid);
@@ -282,20 +286,20 @@ std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
 
     DWORD size = GetFileVersionInfoSize(imgNameW.c_str(), NULL);
     if (size == 0) {
-        return "0 N/A";
+        return "N/A";
     }
     
     buffer = new BYTE[size];
     if (!GetFileVersionInfo(imgNameW.c_str(), 0, size, buffer)) {
         delete[] buffer;
-        return "1 N/A";
+        return "N/A";
     }
 
     LPVOID lpBuffer;
     UINT lpLen;
     if (!VerQueryValue(buffer, L"\\StringFileInfo\\040904b0\\FileDescription", (LPVOID*)&lpBuffer, &lpLen)) {
         delete[] buffer;
-        return "2 N/A";
+        return "N/A";
     }
 
     std::wstring descW = (LPWSTR)lpBuffer;
@@ -349,68 +353,65 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
 
     if (infoFlags & PIF_PROCESS_NAME) {
         const std::string& name = GetProcessName(pid);
-        info.name = new char[256];
+        info.name = new char[name.length() + 1];
         strcpy_s(info.name, name.length() + 1, name.c_str());
+    }
+    if (infoFlags & PIF_PROCESS_PARENT_NAME) {
+        const std::string& pName = GetProcessParentName(pid);
+        info.parentProcessName = new char[pName.length() + 1];
+        strcpy_s(info.parentProcessName, pName.length() + 1, pName.c_str());
     }
     if (infoFlags & PIF_PROCESS_IMAGE_NAME) {
         const std::string& imageName = GetProcessImageName(pid);
-        info.imageName = new char[256];
+        info.imageName = new char[imageName.length() + 1];
         strcpy_s(info.imageName, imageName.length() + 1, imageName.c_str());
     }
     if (infoFlags & PIF_PROCESS_USER) {
         const std::string& user = GetProcessUser(pid);
-        info.user = new char[256];
+        info.user = new char[user.length() + 1];
         strcpy_s(info.user, user.length() + 1, user.c_str());
     }
     if (infoFlags & PIF_PROCESS_PRIORITY) {
         const std::string& priority = GetProcessPriority(pid);
-        info.priority = new char[256];
+        info.priority = new char[priority.length() + 1];
         strcpy_s(info.priority, priority.length() + 1, priority.c_str());
     }
     if (infoFlags & PIF_PROCESS_FILE_VERSION) {
         const std::string& fileVersion = GetProcessFileVersion(pid);
-        info.fileVersion = new char[256];
+        info.fileVersion = new char[fileVersion.length() + 1];
         strcpy_s(info.fileVersion, fileVersion.length() + 1, fileVersion.c_str());
     }
     if (infoFlags & PIF_PROCESS_ARCHITECTURE_TYPE) {
         const std::string& architectureType = GetProcessArchitectureType(pid);
-        info.architectureType = new char[64];
+        info.architectureType = new char[architectureType.length() + 1];
         strcpy_s(info.architectureType, architectureType.length() + 1, architectureType.c_str());
     }
     if (infoFlags & PIF_PROCESS_INTEGRITY_LEVEL) {
         const std::string& integrityLevel = GetProcessIntegrityLevel(pid);
-        info.integrityLevel = new char[64];
+        info.integrityLevel = new char[integrityLevel.length() + 1];
         strcpy_s(info.integrityLevel, integrityLevel.length() + 1, integrityLevel.c_str());
     }
     if (infoFlags & PIF_PROCESS_COMMAND_LINE) {
         const std::string& cmd = GetProcessCommandLine(pid);
-        info.cmd = new char[16];
+        info.cmd = new char[cmd.length() + 1];
         strcpy_s(info.cmd, cmd.length() + 1, cmd.c_str());
     }
     if (infoFlags & PIF_PROCESS_DESCRIPTION) {
         const std::string& description = GetProcessDescription(pid);
-        info.description = new char[4096];
+        info.description = new char[description.length() + 1];
         strcpy_s(info.description, description.length() + 1, description.c_str());
     }
     if (infoFlags & PIF_PROCESS_TIMES) {
-        const std::vector<FILETIME> times = GetProcessCurrentTimes(pid);
-        info.creationTime = times[0];
-        info.userTime = times[1];
-        info.kernelTime = times[2];
-        info.exitTime = times[3];
-        info.totalTime = times[4];
+        info.timesInfo = GetProcessCurrentTimes(pid);
     }
     if (infoFlags & PIF_PROCESS_PPID) {
-        const UINT ppid = GetProcessPPID(pid);
-        info.ppid = ppid;
+        info.ppid = GetProcessPPID(pid);
     }
     if (infoFlags & PIF_PROCESS_PEB) {
-        const UINT64 peb = GetProcessPEB(pid);
-        info.peb = peb;
+        info.peb = GetProcessPEB(pid);
     }
     if (infoFlags & PIF_PROCESS_HANDLES_INFO) {
-        const ProcessHandlesInfo phi = GetProcessHandlesInfo(pid);
-        info.handlesInfo = phi;
+        info.handlesInfo = GetProcessHandlesInfo(pid);
     }
     
     SKIPALL:
@@ -438,6 +439,35 @@ ProcessHandlesInfo ProcessProfiler::GetProcessHandlesInfo(UINT& pid) {
 
     return info;
 }
+ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
+    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    FILETIME creationTime, exitTime, kernelTime, userTime;
+    ProcessTimesInfo info;
+
+    GetProcessTimes(pHandle, &creationTime, &exitTime, &kernelTime, &userTime);
+    
+    FILETIME totalTime;
+
+    ULARGE_INTEGER tu, tl, tr;
+    tl.LowPart = userTime.dwLowDateTime;
+    tl.HighPart = userTime.dwHighDateTime;
+
+    tu.LowPart = kernelTime.dwLowDateTime;
+    tu.HighPart = kernelTime.dwHighDateTime;
+
+    tr.QuadPart = tl.QuadPart + tu.QuadPart;
+
+    totalTime.dwLowDateTime = tr.LowPart;
+    totalTime.dwHighDateTime = tr.HighPart;
+
+    info.creationTime = creationTime;
+    info.exitTime = exitTime;
+    info.kernelTime = kernelTime;
+    info.userTime = userTime;
+    info.totalTime = totalTime;
+
+    return info;
+}
 
 std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 infoFlags) {
     std::vector<ProcessInfo> infos;
@@ -457,34 +487,4 @@ std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 infoFlags) {
         CloseHandle(snapshot);
     }
     return infos;
-}
-std::vector<FILETIME> ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
-    FILETIME creationTime, exitTime, kernelTime, userTime;
-    std::vector<FILETIME> processTimes;
-
-    GetProcessTimes(pHandle, &creationTime, &exitTime, &kernelTime, &userTime);
-
-    processTimes.push_back(creationTime);
-    processTimes.push_back(userTime);
-    processTimes.push_back(kernelTime);
-    processTimes.push_back(exitTime);
-
-    FILETIME totalTime;
-
-    ULARGE_INTEGER tu, tl, tr;
-    tl.LowPart = userTime.dwLowDateTime;
-    tl.HighPart = userTime.dwHighDateTime;
-
-    tu.LowPart = kernelTime.dwLowDateTime;
-    tu.HighPart = kernelTime.dwHighDateTime;
-
-    tr.QuadPart = tl.QuadPart + tu.QuadPart;
-
-    totalTime.dwLowDateTime = tr.LowPart;
-    totalTime.dwHighDateTime = tr.HighPart;
-
-    processTimes.push_back(totalTime);
-
-    return processTimes;
 }

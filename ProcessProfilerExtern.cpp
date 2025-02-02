@@ -15,6 +15,12 @@ extern "C" _declspec(dllexport) const char* GetProcessName(UINT pid) {
 
 	return staticRes.c_str();
 }
+extern "C" _declspec(dllexport) const char* GetProcessParentName(UINT pid) {
+	std::string res = Profiler::processProfiler.GetProcessParentName(pid);
+	static std::string staticRes; staticRes = res;
+
+	return staticRes.c_str();
+}
 extern "C" _declspec(dllexport) const char* GetProcessImageName(UINT pid) {
 	std::string res = Profiler::processProfiler.GetProcessImageName(pid);
 	static std::string staticRes; staticRes = res;
@@ -76,19 +82,16 @@ extern "C" _declspec(dllexport) const UINT* GetProcessPPID(UINT pid) {
 
 	return &staticRes;
 }
+
 extern "C" _declspec(dllexport) const ProcessHandlesInfo* GetProcessHandlesInfo(UINT pid) {
 	ProcessHandlesInfo* res = new ProcessHandlesInfo();
 	*res = Profiler::processProfiler.GetProcessHandlesInfo(pid);
 	return res;
 }
-extern "C" _declspec(dllexport) const FILETIME* GetProcessCurrentTimes(UINT pid, size_t* size) {
-	std::vector<FILETIME> res = Profiler::processProfiler.GetProcessCurrentTimes(pid);
-	*size = res.size();
-
-	FILETIME* arr = new FILETIME[*size];
-	std::copy(res.begin(), res.end(), arr);
-
-	return arr;
+extern "C" _declspec(dllexport) const ProcessTimesInfo* GetProcessCurrentTimes(UINT pid, size_t* size) {
+	ProcessTimesInfo* res = new ProcessTimesInfo();
+	*res = Profiler::processProfiler.GetProcessCurrentTimes(pid);
+	return res;
 }
 
 extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 flags, UINT pid) {
