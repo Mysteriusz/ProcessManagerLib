@@ -11,14 +11,15 @@
 
 namespace ProfilingLib::Profilers {
 	class ProcessProfiler;
-	class CpuProfiler;
 	class Profiler {
 	public:
 		static HANDLE AddNewProcess(DWORD pid);
 		static HANDLE GetProcessHandle(DWORD pid);
 
+		static std::string WideStringToString(std::wstring& str);
+		static std::wstring StringToWideString(std::string& str);
+
 		static std::unordered_map<DWORD, ProcessHolder> processStates;
 		static ProcessProfiler processProfiler;
-		static CpuProfiler cpuProfiler;
 	};
 }

@@ -22,6 +22,9 @@
     <Filter Include="Source Files\Profilers\ProcessProfiler\Models">
       <UniqueIdentifier>{5310c2aa-4ccc-4ed8-b963-f38936526370}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Profilers\Windows">
+      <UniqueIdentifier>{a2f876d4-06fc-41a2-914e-fa20b6fbd980}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ProcessProfiler.cpp">
@@ -46,6 +49,12 @@
     </ClInclude>
     <ClInclude Include="ProcessHolder.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessFlags.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NtTypes.h">
+      <Filter>Source Files\Profilers\Windows</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

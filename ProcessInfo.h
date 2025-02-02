@@ -4,16 +4,26 @@
 // LIBS
 #include "windows.h"
 #include <string>
-    
+#include "ntstatus.h"
+#include "winbase.h"
+#include "winver.h"
+#include "Winternl.h"
+
+struct ProcessHandlesInfo {
+    UINT count = 0;
+    UINT peakCount = 0;
+};
 struct ProcessInfo {
-    char* name = new char[256];
-    char* user = new char[256];
-    char* imageName = new char[256];
-    char* priority = new char[256];
-    char* fileVersion = new char[64];
-    char* integrityLevel = new char[64];
-    char* architectureType = new char[16];
-    char* cmd = new char[4096];
+    char* name = strdup("N/A");
+    char* parentProcessName = strdup("N/A");
+    char* user = strdup("N/A");
+    char* imageName = strdup("N/A");
+    char* priority = strdup("N/A");
+    char* fileVersion = strdup("N/A");
+    char* integrityLevel = strdup("N/A");
+    char* architectureType = strdup("N/A");
+    char* cmd = strdup("N/A");
+    char* description = strdup("N/A");
 
     UINT pid = 0;
     UINT ppid = 0;
@@ -24,6 +34,8 @@ struct ProcessInfo {
     FILETIME exitTime = {0};
     FILETIME userTime = {0};
     FILETIME totalTime = {0};
+
+    ProcessHandlesInfo handlesInfo;
 };
 
 #endif 

@@ -24,6 +24,8 @@
     <ClCompile Include="Profiler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NtTypes.h" />
+    <ClInclude Include="ProcessFlags.h" />
     <ClInclude Include="ProcessHolder.h" />
     <ClInclude Include="ProcessInfo.h" />
     <ClInclude Include="ProcessProfiler.h" />
