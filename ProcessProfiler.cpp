@@ -93,6 +93,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!GetTokenInformation(hToken, TokenUser, buffer, hTokenSize, &hTokenSize)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
+            delete[] buffer;
             return "N/A";
         }
     }
@@ -107,6 +108,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!LookupAccountSid(NULL, pSid, NULL, &nameSize, NULL, &domainSize, &sidName)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
+            delete[] buffer;
             return "N/A";
         }
     }
@@ -117,6 +119,9 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     if (!LookupAccountSid(NULL, pSid, name, &nameSize, domain, &domainSize, &sidName)) {
         if (GetLastError() != 122) {
             CloseHandle(hToken);
+            delete[] buffer;
+            delete[] name;
+            delete[] domain;
             return "N/A";
         }
     }
@@ -126,6 +131,10 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     std::wstring strW = user;
     std::string str = Profiler::WideStringToString(strW);
 
+    CloseHandle(hToken);
+    delete[] buffer;
+    delete[] name;
+    delete[] domain;
     return str;
 }
 std::string ProcessProfiler::GetProcessPriority(UINT& pid) {
@@ -295,14 +304,34 @@ std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
         return "N/A";
     }
 
-    LPVOID lpBuffer;
-    UINT lpLen;
-    if (!VerQueryValue(buffer, L"\\StringFileInfo\\040904b0\\FileDescription", (LPVOID*)&lpBuffer, &lpLen)) {
+    struct LANGANDCODEPAGE {
+        WORD wLanguage;
+        WORD wCodePage;
+    } *lpTranslate;
+
+    UINT cbTranslate = 0;
+    if (!VerQueryValue(buffer, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate)) {
         delete[] buffer;
         return "N/A";
     }
 
-    std::wstring descW = (LPWSTR)lpBuffer;
+    LPVOID lpBuffer;
+    UINT lpLen;
+    std::wstring descW;
+
+    for (unsigned int i = 0; i < (cbTranslate / sizeof(LANGANDCODEPAGE)); i++) {
+        wchar_t block[256];
+
+        swprintf_s(block, L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[i].wLanguage, lpTranslate[i].wCodePage);
+
+        if (!VerQueryValue(buffer, block, &lpBuffer, &lpLen)) {
+            delete[] buffer;
+            return "N/A";
+        }
+
+        descW = (LPWSTR)lpBuffer;
+    }
+
     std::string desc = Profiler::WideStringToString(descW);
 
     delete[] buffer;
@@ -346,8 +375,6 @@ UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
 ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
     ProcessInfo info;
     
-    HMODULE hNtdll = LoadLibraryW(L"ntdll.dll");
-
     if (infoFlags == 0)
         goto SKIPALL;
 

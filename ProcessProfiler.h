@@ -25,7 +25,7 @@ namespace ProfilingLib::Profilers {
 		std::string GetProcessIntegrityLevel(UINT& pid);
 		std::string GetProcessCommandLine(UINT& pid);
 		std::string GetProcessDescription(UINT& pid);
-
+		
 		UINT64 GetProcessPEB(UINT& pid);
 		UINT GetProcessPPID(UINT& pid);
 

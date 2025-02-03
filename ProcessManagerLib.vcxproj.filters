@@ -36,6 +36,9 @@
     <ClCompile Include="Profiler.cpp">
       <Filter>Source Files\Profilers</Filter>
     </ClCompile>
+    <ClCompile Include="ProfilerExtern.cpp">
+      <Filter>Source Files\Profilers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProcessProfiler.h">

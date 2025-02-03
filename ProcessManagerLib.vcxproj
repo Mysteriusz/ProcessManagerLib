@@ -22,6 +22,7 @@
     <ClCompile Include="ProcessProfiler.cpp" />
     <ClCompile Include="ProcessProfilerExtern.cpp" />
     <ClCompile Include="Profiler.cpp" />
+    <ClCompile Include="ProfilerExtern.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NtTypes.h" />
