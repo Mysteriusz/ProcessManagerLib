@@ -456,7 +456,10 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
     if (infoFlags & PIF_PROCESS_MEMORY_INFO) {
         info.memoryInfo = GetProcessMemoryCurrentInfo(pid);
     }
-    
+    if (infoFlags & PIF_PROCESS_IO_INFO) {
+        info.ioInfo = GetProcessIOCurrentInfo(pid);
+    }
+
     SKIPALL:
     info.pid = pid;
 
@@ -465,7 +468,7 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
 ProcessHandlesInfo ProcessProfiler::GetProcessHandlesInfo(UINT& pid) {
     HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
-    ProcessHandlesInfo info;
+    ProcessHandlesInfo info = {};
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
     if (ntdll == NULL) return info;
@@ -487,10 +490,11 @@ ProcessHandlesInfo ProcessProfiler::GetProcessHandlesInfo(UINT& pid) {
 ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
     HANDLE pHandle = Profiler::GetProcessHandle(pid);
     FILETIME creationTime, exitTime, kernelTime, userTime;
-    ProcessTimesInfo info;
+    ProcessTimesInfo info = {};
 
-    GetProcessTimes(pHandle, &creationTime, &exitTime, &kernelTime, &userTime);
-    
+    if (!GetProcessTimes(pHandle, &creationTime, &exitTime, &kernelTime, &userTime))
+        return info;
+
     FILETIME totalTime;
 
     ULARGE_INTEGER tu, tl, tr;
@@ -546,7 +550,63 @@ ProcessMemoryInfo ProcessProfiler::GetProcessMemoryCurrentInfo(UINT& pid) {
     if (status != 0)
         return info;
 
-    info.priority = ppi.PagePriority;
+    info.pagePriority = ppi.PagePriority;
+
+    return info;
+}
+ProcessIOInfo ProcessProfiler::GetProcessIOCurrentInfo(UINT& pid) {
+    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    ProcessIOInfo info = {};
+
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    if (ntdll == NULL) return info;
+
+    _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
+    if (NtQueryInformationProcess == NULL) return info;
+
+    NTTYPES_IO_PRIORITY_HINT iph;
+    IO_COUNTERS ioc;
+    ULONG len;
+
+    NTSTATUS statusIph = NtQueryInformationProcess(pHandle, 33, &iph, sizeof(NTTYPES_IO_PRIORITY_HINT), &len);
+    NTSTATUS statusIoc = NtQueryInformationProcess(pHandle, 2, &ioc, sizeof(IO_COUNTERS), &len);
+    
+    if (statusIph != 0 || statusIoc != 0)
+        return info;
+
+    info.reads = ioc.ReadOperationCount;
+    info.readBytes = ioc.ReadTransferCount;
+    
+    info.writes = ioc.WriteOperationCount;
+    info.writeBytes = ioc.WriteTransferCount;
+    
+    info.other = ioc.OtherOperationCount;
+    info.otherBytes = ioc.OtherTransferCount;
+
+    switch (iph)
+    {
+        case IoPriorityVeryLow:
+            info.ioPriority = 0;
+            break;
+        case IoPriorityLow:
+            info.ioPriority = 1;
+            break;
+        case IoPriorityNormal:
+            info.ioPriority = 2;
+            break;
+        case IoPriorityHigh:
+            info.ioPriority = 3;
+            break;
+        case IoPriorityCritical:
+            info.ioPriority = 4;
+            break;
+        case MaxIoPriorityTypes:
+            info.ioPriority = 5;
+            break;
+        default:
+            info.ioPriority = 0;
+            break;
+    }
 
     return info;
 }

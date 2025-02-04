@@ -30,7 +30,16 @@ struct ProcessMemoryInfo {
     UINT pageFaults = 0;
     UINT workingBytes = 0;
     UINT peakWorkingBytes = 0;
-    UINT64 priority = 0;
+    UINT64 pagePriority = 0;
+};
+struct ProcessIOInfo {
+    UINT64 reads = 0;
+    UINT64 readBytes = 0;
+    UINT64 writes = 0;
+    UINT64 writeBytes = 0;
+    UINT64 other = 0;
+    UINT64 otherBytes = 0;
+    UINT ioPriority = 0;
 };
 struct ProcessInfo {
     char* name = strdup("N/A");
@@ -52,6 +61,7 @@ struct ProcessInfo {
     ProcessTimesInfo timesInfo;
     ProcessHandlesInfo handlesInfo;
     ProcessMemoryInfo memoryInfo;
+    ProcessIOInfo ioInfo;
 };
 
 #endif 

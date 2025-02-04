@@ -104,6 +104,11 @@ extern "C" _declspec(dllexport) const ProcessMemoryInfo* GetProcessMemoryCurrent
 	*res = Profiler::processProfiler.GetProcessMemoryCurrentInfo(pid);
 	return res;
 }
+extern "C" _declspec(dllexport) const ProcessIOInfo* GetProcessIOCurrentInfo(UINT pid) {
+	ProcessIOInfo* res = new ProcessIOInfo();
+	*res = Profiler::processProfiler.GetProcessIOCurrentInfo(pid);
+	return res;
+}
 
 extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 flags, UINT pid) {
 	ProcessInfo* res = new ProcessInfo();
