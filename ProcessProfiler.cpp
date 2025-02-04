@@ -16,6 +16,7 @@
 #include "NtTypes.h"
 #include "winver.h"
 #include "Winternl.h"
+#include "psapi.h"
 #include <sstream>
 #include <filesystem>
 #include <iostream>
@@ -353,6 +354,15 @@ UINT64 ProcessProfiler::GetProcessPEB(UINT& pid) {
 
     return reinterpret_cast<UINT64>(pbi.PebBaseAddress);
 }
+UINT64 ProcessProfiler::GetProcessCycleCount(UINT& pid) {
+    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+
+    UINT64 count;
+    if (!QueryProcessCycleTime(pHandle, &count))
+        return 0;
+
+    return count;
+}
 UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot != INVALID_HANDLE_VALUE)
@@ -440,6 +450,12 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
     if (infoFlags & PIF_PROCESS_HANDLES_INFO) {
         info.handlesInfo = GetProcessHandlesInfo(pid);
     }
+    if (infoFlags & PIF_PROCESS_CYCLE_COUNT) {
+        info.cycles = GetProcessCycleCount(pid);
+    }
+    if (infoFlags & PIF_PROCESS_MEMORY_INFO) {
+        info.memoryInfo = GetProcessMemoryCurrentInfo(pid);
+    }
     
     SKIPALL:
     info.pid = pid;
@@ -463,6 +479,8 @@ ProcessHandlesInfo ProcessProfiler::GetProcessHandlesInfo(UINT& pid) {
 
     info.count = ntphi.HandleCount;
     info.peakCount = ntphi.HandleCountHighWatermark;
+    info.gdiCount = GetGuiResources(pHandle, GR_GDIOBJECTS);
+    info.userCount = GetGuiResources(pHandle, GR_USEROBJECTS);
 
     return info;
 }
@@ -492,6 +510,43 @@ ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
     info.kernelTime = kernelTime;
     info.userTime = userTime;
     info.totalTime = totalTime;
+
+    return info;
+}
+ProcessMemoryInfo ProcessProfiler::GetProcessMemoryCurrentInfo(UINT& pid) {
+    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+
+    ProcessMemoryInfo info = {};
+
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+
+    if (GetProcessMemoryInfo(pHandle, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
+        info.pageFaults = (UINT)pmc.PageFaultCount;
+        
+        info.privateBytes = (UINT)pmc.PagefileUsage;
+        info.peakPrivateBytes = (UINT)pmc.PeakPagefileUsage;
+
+        info.workingBytes = (UINT)pmc.WorkingSetSize;
+        info.peakWorkingBytes = (UINT)pmc.PeakWorkingSetSize;
+        
+        info.virtualBytes = (UINT)pmc.PagefileUsage + (UINT)pmc.WorkingSetSize;
+        info.peakVirtualBytes = (UINT)pmc.PeakPagefileUsage + (UINT)pmc.PeakWorkingSetSize;
+    }
+
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    if (ntdll == NULL) return info;
+
+    _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
+    if (NtQueryInformationProcess == NULL) return info;
+
+    NTTYPES_PAGE_PRIORITY_INFORMATION ppi;
+    ULONG len;
+
+    NTSTATUS status = NtQueryInformationProcess(pHandle, 39, &ppi, sizeof(NTTYPES_PAGE_PRIORITY_INFORMATION), &len);
+    if (status != 0)
+        return info;
+
+    info.priority = ppi.PagePriority;
 
     return info;
 }

@@ -76,6 +76,12 @@ extern "C" _declspec(dllexport) const UINT64* GetProcessPEB(UINT pid) {
 
 	return &staticRes;
 }
+extern "C" _declspec(dllexport) const UINT64* GetProcessCycleCount(UINT pid) {
+	UINT64 res = Profiler::processProfiler.GetProcessCycleCount(pid);
+	static UINT64 staticRes; staticRes = res;
+
+	return &staticRes;
+}
 extern "C" _declspec(dllexport) const UINT* GetProcessPPID(UINT pid) {
 	UINT res = Profiler::processProfiler.GetProcessPPID(pid);
 	static UINT staticRes; staticRes = res;
@@ -88,9 +94,14 @@ extern "C" _declspec(dllexport) const ProcessHandlesInfo* GetProcessHandlesInfo(
 	*res = Profiler::processProfiler.GetProcessHandlesInfo(pid);
 	return res;
 }
-extern "C" _declspec(dllexport) const ProcessTimesInfo* GetProcessCurrentTimes(UINT pid, size_t* size) {
+extern "C" _declspec(dllexport) const ProcessTimesInfo* GetProcessCurrentTimes(UINT pid) {
 	ProcessTimesInfo* res = new ProcessTimesInfo();
 	*res = Profiler::processProfiler.GetProcessCurrentTimes(pid);
+	return res;
+}
+extern "C" _declspec(dllexport) const ProcessMemoryInfo* GetProcessMemoryCurrentInfo(UINT pid) {
+	ProcessMemoryInfo* res = new ProcessMemoryInfo();
+	*res = Profiler::processProfiler.GetProcessMemoryCurrentInfo(pid);
 	return res;
 }
 

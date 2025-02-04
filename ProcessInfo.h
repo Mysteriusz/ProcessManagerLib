@@ -12,6 +12,8 @@
 struct ProcessHandlesInfo {
     UINT count = 0;
     UINT peakCount = 0;
+    UINT gdiCount = 0;
+    UINT userCount = 0;
 };
 struct ProcessTimesInfo {
     FILETIME creationTime = { 0 };
@@ -19,6 +21,16 @@ struct ProcessTimesInfo {
     FILETIME exitTime = { 0 };
     FILETIME userTime = { 0 };
     FILETIME totalTime = { 0 };
+};
+struct ProcessMemoryInfo {
+    UINT privateBytes = 0;
+    UINT peakPrivateBytes = 0;
+    UINT virtualBytes = 0;
+    UINT peakVirtualBytes = 0;
+    UINT pageFaults = 0;
+    UINT workingBytes = 0;
+    UINT peakWorkingBytes = 0;
+    UINT64 priority = 0;
 };
 struct ProcessInfo {
     char* name = strdup("N/A");
@@ -35,9 +47,11 @@ struct ProcessInfo {
     UINT pid = 0;
     UINT ppid = 0;
     UINT64 peb = 0;
+    UINT64 cycles = 0;
 
     ProcessTimesInfo timesInfo;
     ProcessHandlesInfo handlesInfo;
+    ProcessMemoryInfo memoryInfo;
 };
 
 #endif 
