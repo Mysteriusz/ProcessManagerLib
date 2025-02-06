@@ -63,8 +63,7 @@ std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
         }
     }
 
-    std::wstring strW = processName;
-    std::string str = Profiler::WideStringToString(strW);
+    std::string str = Profiler::WideStringToString(processName);
 
     return str;
 }
@@ -128,9 +127,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     }
 
     std::wstring user = std::wstring(domain) + L"\\" + std::wstring(name);
-
-    std::wstring strW = user;
-    std::string str = Profiler::WideStringToString(strW);
+    std::string str = Profiler::WideStringToString(user.c_str());
 
     CloseHandle(hToken);
     delete[] buffer;
@@ -160,7 +157,7 @@ std::string ProcessProfiler::GetProcessPriority(UINT& pid) {
 }
 std::string ProcessProfiler::GetProcessFileVersion(UINT& pid) {
     std::string imgName = GetProcessImageName(pid);
-    std::wstring imgNameW = Profiler::StringToWideString(imgName);
+    std::wstring imgNameW = Profiler::StringToWideString(imgName.c_str());
 
     DWORD len = 0;
     BYTE* buffer = nullptr;
@@ -279,8 +276,7 @@ std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
         return "N/A";
     }
 
-    std::wstring wstr(buffer);
-    std::string str = Profiler::WideStringToString(wstr);
+    std::string str = Profiler::WideStringToString(buffer);
 
     delete[] buffer;
     CloseHandle(pHandle);
@@ -289,7 +285,7 @@ std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
 }
 std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
     std::string imgName = GetProcessImageName(pid);
-    std::wstring imgNameW = Profiler::StringToWideString(imgName);
+    std::wstring imgNameW = Profiler::StringToWideString(imgName.c_str());
 
     DWORD len = 0;
     BYTE* buffer = nullptr;
@@ -316,9 +312,8 @@ std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
         return "N/A";
     }
 
-    LPVOID lpBuffer;
+    LPVOID lpBuffer = nullptr;
     UINT lpLen;
-    std::wstring descW;
 
     for (unsigned int i = 0; i < (cbTranslate / sizeof(LANGANDCODEPAGE)); i++) {
         wchar_t block[256];
@@ -329,11 +324,9 @@ std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
             delete[] buffer;
             return "N/A";
         }
-
-        descW = (LPWSTR)lpBuffer;
     }
 
-    std::string desc = Profiler::WideStringToString(descW);
+    std::string desc = Profiler::WideStringToString((LPWSTR)lpBuffer);
 
     delete[] buffer;
     return desc;
@@ -390,51 +383,101 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
 
     if (infoFlags & PIF_PROCESS_NAME) {
         const std::string& name = GetProcessName(pid);
+
+        if (info.name != nullptr) {
+            delete[] info.name;
+        }
+
         info.name = new char[name.length() + 1];
         strcpy_s(info.name, name.length() + 1, name.c_str());
     }
     if (infoFlags & PIF_PROCESS_PARENT_NAME) {
         const std::string& pName = GetProcessParentName(pid);
+        
+        if (info.parentProcessName != nullptr) {
+            delete[] info.parentProcessName;
+        }
+
         info.parentProcessName = new char[pName.length() + 1];
         strcpy_s(info.parentProcessName, pName.length() + 1, pName.c_str());
     }
     if (infoFlags & PIF_PROCESS_IMAGE_NAME) {
         const std::string& imageName = GetProcessImageName(pid);
+
+        if (info.imageName != nullptr) {
+            delete[] info.imageName;
+        }
+
         info.imageName = new char[imageName.length() + 1];
         strcpy_s(info.imageName, imageName.length() + 1, imageName.c_str());
     }
     if (infoFlags & PIF_PROCESS_USER) {
         const std::string& user = GetProcessUser(pid);
+
+        if (info.user != nullptr) {
+            delete[] info.user;
+        }
+
         info.user = new char[user.length() + 1];
         strcpy_s(info.user, user.length() + 1, user.c_str());
     }
     if (infoFlags & PIF_PROCESS_PRIORITY) {
         const std::string& priority = GetProcessPriority(pid);
+        
+        if (info.priority != nullptr) {
+            delete[] info.priority;
+        }
+
         info.priority = new char[priority.length() + 1];
         strcpy_s(info.priority, priority.length() + 1, priority.c_str());
     }
     if (infoFlags & PIF_PROCESS_FILE_VERSION) {
         const std::string& fileVersion = GetProcessFileVersion(pid);
+        
+        if (info.fileVersion != nullptr) {
+            delete[] info.fileVersion;
+        }
+
         info.fileVersion = new char[fileVersion.length() + 1];
         strcpy_s(info.fileVersion, fileVersion.length() + 1, fileVersion.c_str());
     }
     if (infoFlags & PIF_PROCESS_ARCHITECTURE_TYPE) {
         const std::string& architectureType = GetProcessArchitectureType(pid);
+        
+        if (info.architectureType != nullptr) {
+            delete[] info.architectureType;
+        }
+        
         info.architectureType = new char[architectureType.length() + 1];
         strcpy_s(info.architectureType, architectureType.length() + 1, architectureType.c_str());
     }
     if (infoFlags & PIF_PROCESS_INTEGRITY_LEVEL) {
         const std::string& integrityLevel = GetProcessIntegrityLevel(pid);
+        
+        if (info.integrityLevel != nullptr) {
+            delete[] info.integrityLevel;
+        }
+
         info.integrityLevel = new char[integrityLevel.length() + 1];
         strcpy_s(info.integrityLevel, integrityLevel.length() + 1, integrityLevel.c_str());
     }
     if (infoFlags & PIF_PROCESS_COMMAND_LINE) {
         const std::string& cmd = GetProcessCommandLine(pid);
+        
+        if (info.cmd != nullptr) {
+            delete[] info.cmd;
+        }
+
         info.cmd = new char[cmd.length() + 1];
         strcpy_s(info.cmd, cmd.length() + 1, cmd.c_str());
     }
     if (infoFlags & PIF_PROCESS_DESCRIPTION) {
         const std::string& description = GetProcessDescription(pid);
+       
+        if (info.description != nullptr) {
+            delete[] info.description;
+        }
+        
         info.description = new char[description.length() + 1];
         strcpy_s(info.description, description.length() + 1, description.c_str());
     }
@@ -458,6 +501,16 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 infoFlags, UINT& pid) {
     }
     if (infoFlags & PIF_PROCESS_IO_INFO) {
         info.ioInfo = GetProcessIOCurrentInfo(pid);
+    }
+    if (infoFlags & PIF_PROCESS_MODULES_INFO) {
+        std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(pid);
+        size_t size = res.size();
+
+        ProcessModuleInfo* arr = new ProcessModuleInfo[size];
+        std::copy(res.begin(), res.end(), arr);
+
+        info.moduleCount = (UINT)size;
+        info.modules = arr;
     }
 
     SKIPALL:
@@ -611,6 +664,101 @@ ProcessIOInfo ProcessProfiler::GetProcessIOCurrentInfo(UINT& pid) {
     return info;
 }
 
+std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT& pid){
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    std::vector<ProcessModuleInfo> infos;
+    HMODULE hMods[1024];
+    DWORD needed;
+
+    if (!EnumProcessModulesEx(pHandle, hMods, sizeof(hMods), &needed, LIST_MODULES_64BIT)){
+        return infos;
+    }
+
+    int count = needed / sizeof(HMODULE);
+
+    for (int i = 0; i < count; i++) {
+        wchar_t mName[MAX_PATH];
+        wchar_t mPath[MAX_PATH];
+        MODULEINFO mInfo;
+
+        if (GetModuleBaseName(pHandle, hMods[i], mName, MAX_PATH)
+            && GetModuleFileNameEx(pHandle, hMods[i], mPath, MAX_PATH)
+            && GetModuleInformation(pHandle, hMods[i], &mInfo, sizeof(MODULEINFO))) {
+
+            ProcessModuleInfo info;
+
+            std::string pName = Profiler::WideStringToString(mName);
+            std::string pPath = Profiler::WideStringToString(mPath);
+
+            if (info.name != nullptr) {
+                delete[] info.name;
+                info.name = nullptr;
+            }
+            if (info.path != nullptr) {
+                delete[] info.name;
+                info.path = nullptr;
+            }
+            if (info.description != nullptr) {
+                delete[] info.name;
+                info.description = nullptr;
+            }
+
+            info.name = _strdup(pName.c_str());
+            info.path = _strdup(pPath.c_str());
+            info.size = mInfo.SizeOfImage;
+            info.address = reinterpret_cast<UINT64>(mInfo.lpBaseOfDll);
+
+            DWORD len = 0;
+            BYTE* buffer = nullptr;
+            DWORD size = GetFileVersionInfoSize(mPath, NULL);
+
+            if (size == 0) {
+                continue;
+            }
+
+            buffer = new BYTE[size];
+            if (!GetFileVersionInfo(mPath, 0, size, buffer)) {
+                delete[] buffer;
+                continue;
+            }
+
+            struct LANGANDCODEPAGE {
+                WORD wLanguage;
+                WORD wCodePage;
+            } *lpTranslate;
+
+            UINT cbTranslate = 0;
+            if (!VerQueryValue(buffer, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate)) {
+                delete[] buffer;
+                continue;
+            }
+
+            LPVOID lpBuffer = nullptr;
+            UINT lpLen;
+
+            for (unsigned int i = 0; i < (cbTranslate / sizeof(LANGANDCODEPAGE)); i++) {
+                wchar_t block[256];
+
+                swprintf_s(block, L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[i].wLanguage, lpTranslate[i].wCodePage);
+
+                if (!VerQueryValue(buffer, block, &lpBuffer, &lpLen)) {
+                    delete[] buffer;
+                    continue;
+                }
+            }
+
+            std::string pDesc = Profiler::WideStringToString((LPWSTR)lpBuffer);
+            info.description = _strdup(pDesc.c_str());
+
+            delete[] buffer;
+
+            infos.push_back(info);
+        }   
+    }
+
+    return infos;
+}
 std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 infoFlags) {
     std::vector<ProcessInfo> infos;
 

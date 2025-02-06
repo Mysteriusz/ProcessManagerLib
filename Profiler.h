@@ -18,8 +18,8 @@ namespace ProfilingLib::Profilers {
 		
 		static BOOL EnableDebugPrivilages();
 
-		static std::string WideStringToString(std::wstring& str);
-		static std::wstring StringToWideString(std::string& str);
+		static std::string WideStringToString(const wchar_t* str);
+		static std::wstring StringToWideString(const char* str);
 
 		static std::unordered_map<DWORD, ProcessHolder> processStates;
 		static ProcessProfiler processProfiler;

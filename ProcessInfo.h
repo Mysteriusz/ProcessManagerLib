@@ -41,17 +41,24 @@ struct ProcessIOInfo {
     UINT64 otherBytes = 0;
     UINT ioPriority = 0;
 };
+struct ProcessModuleInfo {
+    char* name = nullptr;
+    char* path = nullptr;
+    char* description = nullptr;
+    UINT64 address = 0;
+    UINT64 size = 0;
+};
 struct ProcessInfo {
-    char* name = strdup("N/A");
-    char* parentProcessName = strdup("N/A");
-    char* user = strdup("N/A");
-    char* imageName = strdup("N/A");
-    char* priority = strdup("N/A");
-    char* fileVersion = strdup("N/A");
-    char* integrityLevel = strdup("N/A");
-    char* architectureType = strdup("N/A");
-    char* cmd = strdup("N/A");
-    char* description = strdup("N/A");
+    char* name = nullptr;
+    char* parentProcessName = nullptr;
+    char* user = nullptr;
+    char* imageName = nullptr;
+    char* priority = nullptr;
+    char* fileVersion = nullptr;
+    char* integrityLevel = nullptr;
+    char* architectureType = nullptr;
+    char* cmd = nullptr;
+    char* description = nullptr;
 
     UINT pid = 0;
     UINT ppid = 0;
@@ -62,6 +69,9 @@ struct ProcessInfo {
     ProcessHandlesInfo handlesInfo;
     ProcessMemoryInfo memoryInfo;
     ProcessIOInfo ioInfo;
+
+    UINT moduleCount = 0;
+    ProcessModuleInfo* modules;
 };
 
 #endif 

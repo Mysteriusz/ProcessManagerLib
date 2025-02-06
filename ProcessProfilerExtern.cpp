@@ -110,11 +110,37 @@ extern "C" _declspec(dllexport) const ProcessIOInfo* GetProcessIOCurrentInfo(UIN
 	return res;
 }
 
+extern "C" _declspec(dllexport) const ProcessModuleInfo* GetProcessAllModuleInfo(UINT pid, size_t* size) {
+	std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(pid);
+	*size = res.size();
+
+	ProcessModuleInfo* arr = new ProcessModuleInfo[*size];
+	std::copy(res.begin(), res.end(), arr);
+
+	return arr;
+}
+
 extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 flags, UINT pid) {
 	ProcessInfo* res = new ProcessInfo();
 	*res = Profiler::processProfiler.GetProcessInfo(flags, pid);
+
 	return res;
 }
+extern "C" __declspec(dllexport) void FreeProcessInfo(ProcessInfo* info) {
+	delete[] info->name;
+	delete[] info->parentProcessName;
+	delete[] info->user;
+	delete[] info->imageName;
+	delete[] info->priority;
+	delete[] info->fileVersion;
+	delete[] info->integrityLevel;
+	delete[] info->architectureType;
+	delete[] info->cmd;
+	delete[] info->description;
+	delete[] info->modules;
+}
+
+
 extern "C" __declspec(dllexport) const ProcessInfo* GetAllProcessInfo(UINT64 flags, size_t* size) {
 	std::vector<ProcessInfo> res = Profiler::processProfiler.GetAllProcessInfo(flags);
 	*size = res.size();

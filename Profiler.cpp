@@ -31,17 +31,17 @@ HANDLE Profiler::GetProcessHandle(DWORD pid) {
     return processStates[pid].pHandle;
 }
 
-std::string Profiler::WideStringToString(std::wstring& str) {
-    int mlen = WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, nullptr, 0, nullptr, nullptr);
+std::string Profiler::WideStringToString(const wchar_t* str) {
+    int mlen = WideCharToMultiByte(CP_UTF8, 0, str, -1, nullptr, 0, nullptr, nullptr);
     std::string multiStr(mlen, 0);
-    WideCharToMultiByte(CP_UTF8, 0, str.c_str(), -1, &multiStr[0], mlen, nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, str, -1, &multiStr[0], mlen, nullptr, nullptr);
 
     return multiStr;
 }
-std::wstring Profiler::StringToWideString(std::string& str) {
-    int wlen = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, nullptr, 0);
+std::wstring Profiler::StringToWideString(const char* str) {
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, str, -1, nullptr, 0);
     std::wstring widestr(wlen, 0);
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &widestr[0], wlen);
+    MultiByteToWideChar(CP_UTF8, 0, str, -1, &widestr[0], wlen);
 
     return widestr;
 }
