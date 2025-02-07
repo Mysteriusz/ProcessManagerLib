@@ -5,13 +5,24 @@
 #include "winver.h"
 #include "Winternl.h"
 
-typedef NTSTATUS(NTAPI* _NtQueryInformationProcess)(
-    HANDLE ProcessHandle,
-    DWORD ProcessInformationClass,
-    PVOID ProcessInformation,
-    DWORD ProcessInformationLength,
-    PDWORD ReturnLength
-);
+typedef struct _RTL_PROCESS_MODULE_INFORMATION
+{
+    PVOID Section;
+    PVOID MappedBase;
+    PVOID ImageBase;
+    ULONG ImageSize;
+    ULONG Flags;
+    USHORT LoadOrderIndex;
+    USHORT InitOrderIndex;
+    USHORT LoadCount;
+    USHORT OffsetToFileName;
+    UCHAR FullPathName[256];
+} RTL_PROCESS_MODULE_INFORMATION, * PRTL_PROCESS_MODULE_INFORMATION;
+typedef struct _RTL_PROCESS_MODULES
+{
+    ULONG NumberOfModules;
+    _Field_size_(NumberOfModules) RTL_PROCESS_MODULE_INFORMATION Modules[1];
+} RTL_PROCESS_MODULES, * PRTL_PROCESS_MODULES;
 
 typedef struct _NTTYPES_PROCESS_HANDLE_INFORMATION
 {
@@ -38,3 +49,17 @@ typedef enum _NTTYPES_IO_PRIORITY_HINT
     IoPriorityCritical,
     MaxIoPriorityTypes
 } NTTYPES_IO_PRIORITY_HINT;
+
+
+typedef NTSTATUS(NTAPI* _NtQueryInformationProcess)(
+    HANDLE ProcessHandle,
+    DWORD ProcessInformationClass,
+    PVOID ProcessInformation,
+    DWORD ProcessInformationLength,
+    PDWORD ReturnLength
+);
+typedef NTSTATUS(NTAPI* _LdrQueryProcessModuleInformation)(
+    _In_opt_ PRTL_PROCESS_MODULES ModuleInformation,
+    _In_opt_ ULONG Size,
+    _Out_ PULONG ReturnedSize
+);

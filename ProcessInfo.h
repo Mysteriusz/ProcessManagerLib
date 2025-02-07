@@ -71,7 +71,7 @@ struct ProcessInfo {
     ProcessIOInfo ioInfo;
 
     UINT moduleCount = 0;
-    ProcessModuleInfo* modules;
+    ProcessModuleInfo* modules = nullptr;
 };
 
 #endif 

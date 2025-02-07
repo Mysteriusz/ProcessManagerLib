@@ -21,6 +21,8 @@ namespace ProfilingLib::Profilers {
 		static std::string WideStringToString(const wchar_t* str);
 		static std::wstring StringToWideString(const char* str);
 
+		static std::string GetFileDescription(const wchar_t* path);
+
 		static std::unordered_map<DWORD, ProcessHolder> processStates;
 		static ProcessProfiler processProfiler;
 	};

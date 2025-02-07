@@ -110,8 +110,8 @@ extern "C" _declspec(dllexport) const ProcessIOInfo* GetProcessIOCurrentInfo(UIN
 	return res;
 }
 
-extern "C" _declspec(dllexport) const ProcessModuleInfo* GetProcessAllModuleInfo(UINT pid, size_t* size) {
-	std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(pid);
+extern "C" _declspec(dllexport) const ProcessModuleInfo* GetProcessAllModuleInfo(UINT64 moduleFlags, UINT pid, size_t* size) {
+	std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(moduleFlags, pid);
 	*size = res.size();
 
 	ProcessModuleInfo* arr = new ProcessModuleInfo[*size];
@@ -120,29 +120,42 @@ extern "C" _declspec(dllexport) const ProcessModuleInfo* GetProcessAllModuleInfo
 	return arr;
 }
 
-extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 flags, UINT pid) {
+extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 processFlag, UINT64 moduleFlags, UINT pid) {
 	ProcessInfo* res = new ProcessInfo();
-	*res = Profiler::processProfiler.GetProcessInfo(flags, pid);
+	*res = Profiler::processProfiler.GetProcessInfo(processFlag, moduleFlags, pid);
 
 	return res;
 }
 extern "C" __declspec(dllexport) void FreeProcessInfo(ProcessInfo* info) {
-	delete[] info->name;
-	delete[] info->parentProcessName;
-	delete[] info->user;
-	delete[] info->imageName;
-	delete[] info->priority;
-	delete[] info->fileVersion;
-	delete[] info->integrityLevel;
-	delete[] info->architectureType;
-	delete[] info->cmd;
-	delete[] info->description;
+	if (!info) return;
+
+	delete[] info->name; info->name = nullptr;
+	delete[] info->parentProcessName; info->parentProcessName = nullptr;
+	delete[] info->user; info->user = nullptr;
+	delete[] info->imageName; info->imageName = nullptr;
+	delete[] info->priority; info->priority = nullptr;
+	delete[] info->fileVersion; info->fileVersion = nullptr;
+	delete[] info->integrityLevel; info->integrityLevel = nullptr;
+	delete[] info->architectureType; info->architectureType = nullptr;
+	delete[] info->cmd; info->cmd = nullptr;
+	delete[] info->description; info->description = nullptr;
+
+	for (UINT i = 0; i < info->moduleCount; ++i) {
+		delete[] info->modules[i].name; info->modules[i].name = nullptr;
+		delete[] info->modules[i].path; info->modules[i].path = nullptr;
+		delete[] info->modules[i].description; info->modules[i].description = nullptr;
+	}
+
 	delete[] info->modules;
+	info->modules = nullptr;
+
+	delete info;
 }
 
 
-extern "C" __declspec(dllexport) const ProcessInfo* GetAllProcessInfo(UINT64 flags, size_t* size) {
-	std::vector<ProcessInfo> res = Profiler::processProfiler.GetAllProcessInfo(flags);
+
+extern "C" __declspec(dllexport) const ProcessInfo* GetAllProcessInfo(UINT64 processFlags, UINT64 moduleFlags, size_t* size) {
+	std::vector<ProcessInfo> res = Profiler::processProfiler.GetAllProcessInfo(processFlags, moduleFlags);
 	*size = res.size();
 
 	ProcessInfo* arr = new ProcessInfo[*size];

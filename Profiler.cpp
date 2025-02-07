@@ -46,6 +46,52 @@ std::wstring Profiler::StringToWideString(const char* str) {
     return widestr;
 }
 
+std::string Profiler::GetFileDescription(const wchar_t* path) {
+    DWORD len = 0;
+    BYTE* buffer = nullptr;
+
+    DWORD size = GetFileVersionInfoSize(path, NULL);
+    if (size == 0) {
+        return "N/A";
+    }
+
+    buffer = new BYTE[size];
+    if (!GetFileVersionInfo(path, 0, size, buffer)) {
+        delete[] buffer;
+        return "N/A";
+    }
+
+    struct LANGANDCODEPAGE {
+        WORD wLanguage;
+        WORD wCodePage;
+    } *lpTranslate;
+
+    UINT cbTranslate = 0;
+    if (!VerQueryValue(buffer, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate)) {
+        delete[] buffer;
+        return "N/A";
+    }
+
+    LPVOID lpBuffer = nullptr;
+    UINT lpLen;
+
+    for (unsigned int i = 0; i < (cbTranslate / sizeof(LANGANDCODEPAGE)); i++) {
+        wchar_t block[256];
+
+        swprintf_s(block, L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[i].wLanguage, lpTranslate[i].wCodePage);
+
+        if (!VerQueryValue(buffer, block, &lpBuffer, &lpLen)) {
+            delete[] buffer;
+            return "N/A";
+        }
+    }
+
+    std::string desc = Profiler::WideStringToString((LPWSTR)lpBuffer);
+
+    delete[] buffer;
+    return desc;
+}
+
 BOOL Profiler::EnableDebugPrivilages() {
     HANDLE hToken;
     LUID luid;
