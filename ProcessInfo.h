@@ -9,11 +9,10 @@
 #include "winver.h"
 #include "Winternl.h"
 
-struct ProcessHandlesInfo {
-    UINT count = 0;
-    UINT peakCount = 0;
-    UINT gdiCount = 0;
-    UINT userCount = 0;
+struct ProcessHandleInfo {
+    char* type = nullptr;
+    char* name = nullptr;
+    UINT64 handle = 0;
 };
 struct ProcessTimesInfo {
     FILETIME creationTime = { 0 };
@@ -66,12 +65,17 @@ struct ProcessInfo {
     UINT64 cycles = 0;
 
     ProcessTimesInfo timesInfo;
-    ProcessHandlesInfo handlesInfo;
     ProcessMemoryInfo memoryInfo;
     ProcessIOInfo ioInfo;
 
     UINT moduleCount = 0;
     ProcessModuleInfo* modules = nullptr;
+
+    UINT handleCount = 0;
+    UINT handlePeakCount = 0;
+    UINT gdiCount = 0;
+    UINT userCount = 0;
+    ProcessHandleInfo* handles = nullptr;
 };
 
 #endif 

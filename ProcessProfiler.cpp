@@ -332,7 +332,7 @@ UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
     return 0;
 }
 
-ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT& pid) {
+ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT& pid) {
     ProcessInfo info;
     
     if (processInfoFlags == 0)
@@ -448,7 +448,18 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 modu
         info.peb = GetProcessPEB(pid);
     }
     if (processInfoFlags & PIF_PROCESS_HANDLES_INFO) {
-        info.handlesInfo = GetProcessHandlesInfo(pid);
+        std::vector<ProcessHandleInfo> res = Profiler::processProfiler.GetProcessAllHandleInfo(handleInfoFlags, pid);
+        size_t size = res.size();
+
+        ProcessHandleInfo* arr = new ProcessHandleInfo[size];
+        std::copy(res.begin(), res.end(), arr);
+
+        HANDLE pHandle = Profiler::GetProcessHandle(pid);
+
+        info.handleCount = (UINT)size;
+        info.handles = arr;
+        info.gdiCount = GetGuiResources(pHandle, GR_GDIOBJECTS);
+        info.userCount = GetGuiResources(pHandle, GR_USEROBJECTS);
     }
     if (processInfoFlags & PIF_PROCESS_CYCLE_COUNT) {
         info.cycles = GetProcessCycleCount(pid);
@@ -472,28 +483,6 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 modu
 
     SKIPALL:
     info.pid = pid;
-
-    return info;
-}
-ProcessHandlesInfo ProcessProfiler::GetProcessHandlesInfo(UINT& pid) {
-    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-
-    ProcessHandlesInfo info = {};
-
-    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
-    if (ntdll == NULL) return info;
-
-    _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
-    if (NtQueryInformationProcess == NULL) return info;
-
-    NTTYPES_PROCESS_HANDLE_INFORMATION ntphi;
-    NTSTATUS status = NtQueryInformationProcess(pHandle, 20, &ntphi, sizeof(ntphi), NULL);
-    if (status != 0) return info;
-
-    info.count = ntphi.HandleCount;
-    info.peakCount = ntphi.HandleCountHighWatermark;
-    info.gdiCount = GetGuiResources(pHandle, GR_GDIOBJECTS);
-    info.userCount = GetGuiResources(pHandle, GR_USEROBJECTS);
 
     return info;
 }
@@ -593,92 +582,154 @@ ProcessIOInfo ProcessProfiler::GetProcessIOCurrentInfo(UINT& pid) {
     info.other = ioc.OtherOperationCount;
     info.otherBytes = ioc.OtherTransferCount;
 
-    switch (iph)
-    {
-        case IoPriorityVeryLow:
-            info.ioPriority = 0;
-            break;
-        case IoPriorityLow:
-            info.ioPriority = 1;
-            break;
-        case IoPriorityNormal:
-            info.ioPriority = 2;
-            break;
-        case IoPriorityHigh:
-            info.ioPriority = 3;
-            break;
-        case IoPriorityCritical:
-            info.ioPriority = 4;
-            break;
-        case MaxIoPriorityTypes:
-            info.ioPriority = 5;
-            break;
-        default:
-            info.ioPriority = 0;
-            break;
-    }
+    info.ioPriority = iph;
 
     return info;
 }
 
-std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT64 moduleInfoFlags, UINT& pid){
+std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT64 moduleInfoFlags, UINT& pid) {
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
     std::vector<ProcessModuleInfo> infos;
+
+    HMODULE modules[1024];
+    DWORD cbNeeded;
+    if (EnumProcessModulesEx(pHandle, modules, sizeof(modules), &cbNeeded, LIST_MODULES_ALL)) {
+        for (size_t i = 0; i < (cbNeeded / sizeof(HMODULE)); i++) {
+           
+            ProcessModuleInfo info;
+            WCHAR modulePath[MAX_PATH];
+
+            if (!GetModuleFileNameExW(pHandle, modules[i], modulePath, MAX_PATH)) {
+                continue;
+            }
+
+            if (MIF_MODULE_NAME) {
+                info.name = _strdup(Profiler::WideStringToString(std::filesystem::path(modulePath).filename().c_str()).c_str());
+            }
+            if (MIF_MODULE_ADDRESS) {
+                info.address = reinterpret_cast<UINT64>(modules[i]);
+            }
+            if (MIF_MODULE_PATH) {
+                info.path = _strdup(Profiler::WideStringToString(modulePath).c_str());
+            }
+            if (MIF_MODULE_SIZE) {
+                MODULEINFO modInfo;
+                if (GetModuleInformation(pHandle, modules[i], &modInfo, sizeof(modInfo))) {
+                    info.size = modInfo.SizeOfImage;
+                }
+            }
+            if (MIF_MODULE_DESCRIPTION) {
+                info.description = _strdup(Profiler::GetFileDescription(modulePath).c_str());
+            }
+
+            infos.push_back(info);
+        }
+    }
+
+    CloseHandle(pHandle);
+    return infos;
+}
+std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 handleInfoFlags, UINT& pid) {
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    std::vector<ProcessHandleInfo> infos;
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
     if (ntdll == NULL) return infos;
 
-    _LdrQueryProcessModuleInformation LdrQueryInformationProcess = (_LdrQueryProcessModuleInformation)GetProcAddress(ntdll, "LdrQueryProcessModuleInformation");
+    _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
+    if (NtQueryInformationProcess == NULL) return infos;
+
+    ULONG bufferSize = sizeof(PROCESS_HANDLE_SNAPSHOT_INFORMATION);
+    PROCESS_HANDLE_SNAPSHOT_INFORMATION* phsi = (PROCESS_HANDLE_SNAPSHOT_INFORMATION*)malloc(bufferSize);
     
-    ULONG bufferSize = sizeof(RTL_PROCESS_MODULES);
-    _RTL_PROCESS_MODULES* pm = (_RTL_PROCESS_MODULES*)malloc(bufferSize);
+    NTSTATUS status = NtQueryInformationProcess(pHandle, 51, phsi, bufferSize, &bufferSize);
+    
+    PROCESS_HANDLE_SNAPSHOT_INFORMATION* temp = (PROCESS_HANDLE_SNAPSHOT_INFORMATION*)realloc(phsi, bufferSize);
 
-    ULONG len = 0;
+    if (temp == nullptr) {
+        free(phsi);
+        return infos;
+    }
+    phsi = temp;
 
-    NTSTATUS status = LdrQueryInformationProcess(pm, bufferSize, &len);
+    status = NtQueryInformationProcess(pHandle, 51, phsi, bufferSize, &bufferSize);
 
-    bufferSize = sizeof(RTL_PROCESS_MODULES) + (pm->NumberOfModules - 1) * sizeof(RTL_PROCESS_MODULE_INFORMATION);
-    pm = (_RTL_PROCESS_MODULES*)realloc(pm, bufferSize);
+    if (status == STATUS_INVALID_HANDLE)
+        return infos;
 
-    status = LdrQueryInformationProcess(pm, bufferSize, &len);
+    for (ULONG i = 0; i < phsi->NumberOfHandles; i++) {
+        ProcessHandleInfo info;
 
-    for (ULONG i = 0; i < pm->NumberOfModules; i++) {
-        ProcessModuleInfo info;
-        
-        char* path = reinterpret_cast<char*>(static_cast<unsigned char*>(pm->Modules[i].FullPathName));
+        HANDLE hHandle = phsi->Handles[i].HandleValue;
+        _NtQueryObject NtQueryObject = (_NtQueryObject)GetProcAddress(ntdll, "NtQueryObject");
 
-        if (moduleInfoFlags & MIF_MODULE_NAME) {
-            const std::string name(std::filesystem::path(path).filename().string());
+        if (handleInfoFlags & HIF_HANDLE_NAME) {
+            ULONG oBufferSize = sizeof(OBJECT_NAME_INFORMATION);
+            OBJECT_NAME_INFORMATION* oni = (OBJECT_NAME_INFORMATION*)malloc(oBufferSize);
 
-            info.name = new char[name.length() + 1];
-            strcpy_s(info.name, name.length() + 1, name.c_str());
+            NTSTATUS oStatus = NtQueryObject(hHandle, (OBJECT_INFORMATION_CLASS)1, oni, oBufferSize, &oBufferSize);
+
+            OBJECT_NAME_INFORMATION* temp = (OBJECT_NAME_INFORMATION*)realloc(oni, oBufferSize);
+            
+            if (temp == nullptr) {
+                free(oni);
+                return infos;
+            }
+            oni = temp;
+
+            oStatus = NtQueryObject(hHandle, (OBJECT_INFORMATION_CLASS)1, oni, oBufferSize, &oBufferSize);
+            
+            UNICODE_STRING name = oni->Name;
+            if (!name.Buffer || oStatus == 0xC0000008)
+                continue;
+            
+            const std::string str = Profiler::WideStringToString(name.Buffer);
+
+            info.name = _strdup(str.c_str());
+
+            free(oni);
         }
-        if (moduleInfoFlags & MIF_MODULE_PATH) {
-            const std::string pathString(path);
+        if (handleInfoFlags & HIF_HANDLE_TYPE) {
+            ULONG oBufferSize = sizeof(OBJECT_TYPE_INFORMATION);
+            OBJECT_TYPE_INFORMATION* oti = (OBJECT_TYPE_INFORMATION*)malloc(oBufferSize);
 
-            info.path = new char[pathString.length() + 1];
-            strcpy_s(info.path, pathString.length() + 1, pathString.c_str());
-        }
-        if (moduleInfoFlags & MIF_MODULE_ADDRESS) {
-            info.address = reinterpret_cast<UINT64>(pm->Modules[i].ImageBase);
-        }
-        if (moduleInfoFlags & MIF_MODULE_SIZE) {
-            info.size = pm->Modules[i].ImageSize;
-        }
-        if (moduleInfoFlags & MIF_MODULE_DESCRIPTION) {
-            const std::string desc = Profiler::GetFileDescription(Profiler::StringToWideString(path).c_str());
+            NTSTATUS oStatus = NtQueryObject(hHandle, ObjectTypeInformation, oti, oBufferSize, &oBufferSize);
 
-            info.description = new char[desc.length() + 1];
-            strcpy_s(info.description, desc.length() + 1, desc.c_str());
+            OBJECT_TYPE_INFORMATION* temp = (OBJECT_TYPE_INFORMATION*)realloc(oti, oBufferSize);
+
+            if (temp == nullptr) {
+                free(oti);
+                return infos;
+            }
+            oti = temp;
+
+            oStatus = NtQueryObject(hHandle, ObjectTypeInformation, oti, oBufferSize, &oBufferSize);
+            
+            UNICODE_STRING typeName = oti->TypeName;
+            if (!typeName.Buffer || oStatus == 0xC0000008)
+                continue;
+
+            const std::string str = Profiler::WideStringToString(typeName.Buffer);
+
+            info.type = _strdup(str.c_str());
+
+            free(oti);
+        }
+        if (handleInfoFlags & HIF_HANDLE_ADDRESS) {
+            info.handle = reinterpret_cast<UINT64>(hHandle);
         }
         
         infos.push_back(info);
     }
 
-    free(pm);
-
+    free(phsi);
+    CloseHandle(pHandle);
     return infos;
 }
-std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags) {
+
+std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags) {
     std::vector<ProcessInfo> infos;
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -689,7 +740,7 @@ std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFl
         {
             while (Process32Next(snapshot, &pe32))
             {
-                ProcessInfo info = GetProcessInfo(processInfoFlags, moduleInfoFlags, (UINT&)pe32.th32ProcessID);
+                ProcessInfo info = GetProcessInfo(processInfoFlags, moduleInfoFlags, handleInfoFlags, (UINT&)pe32.th32ProcessID);
                 infos.push_back(info);
             }
         }
