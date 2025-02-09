@@ -14,16 +14,16 @@ using namespace ProfilingLib::Profilers;
 ProcessProfiler Profiler::processProfiler;
 std::unordered_map<DWORD, ProcessHolder> Profiler::processStates;
 
-HANDLE Profiler::AddNewProcess(DWORD pid) {
-	ProcessHolder state;
+HANDLE* Profiler::AddNewProcess(DWORD pid) {
+	ProcessHolder* state = new ProcessHolder();
 
-    state.pHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    state->pHandle = (HANDLE*)OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
 
-    processStates[pid] = state;
+    processStates[pid] = *state;
 
-    return processStates[pid].pHandle;
+    return state->pHandle;
 }
-HANDLE Profiler::GetProcessHandle(DWORD pid) {
+HANDLE* Profiler::GetProcessHandle(DWORD pid) {
     if (processStates.find(pid) == processStates.end()) {
         return AddNewProcess(pid);
     }

@@ -47,6 +47,12 @@ struct ProcessModuleInfo {
     UINT64 address = 0;
     UINT64 size = 0;
 };
+struct ProcessThreadInfo {
+    UINT priority = 0;
+    UINT tid = 0;
+    UINT64 startAddress = 0;
+    UINT64 cyclesDelta = 0;
+};
 struct ProcessInfo {
     char* name = nullptr;
     char* parentProcessName = nullptr;
@@ -76,6 +82,9 @@ struct ProcessInfo {
     UINT gdiCount = 0;
     UINT userCount = 0;
     ProcessHandleInfo* handles = nullptr;
+
+    UINT threadCount = 0;
+    ProcessThreadInfo* threads = nullptr;
 };
 
 #endif 

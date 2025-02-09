@@ -123,10 +123,19 @@ extern "C" _declspec(dllexport) const ProcessHandleInfo* GetProcessAllHandleInfo
 
 	return arr;
 }
+extern "C" _declspec(dllexport) const ProcessThreadInfo* GetProcessAllThreadInfo(UINT64 handleFlags, UINT pid, size_t* size) {
+	std::vector<ProcessThreadInfo> res = Profiler::processProfiler.GetProcessAllThreadInfo(handleFlags, pid);
+	*size = res.size();
 
-extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 processFlag, UINT64 moduleFlags, UINT64 handleFlags, UINT pid) {
+	ProcessThreadInfo* arr = new ProcessThreadInfo[*size];
+	std::copy(res.begin(), res.end(), arr);
+
+	return arr;
+}
+
+extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(UINT64 processFlag, UINT64 moduleFlags, UINT64 handleFlags, UINT64 threadFlags, UINT pid) {
 	ProcessInfo* res = new ProcessInfo();
-	*res = Profiler::processProfiler.GetProcessInfo(processFlag, moduleFlags, handleFlags, pid);
+	*res = Profiler::processProfiler.GetProcessInfo(processFlag, moduleFlags, handleFlags, threadFlags, pid);
 
 	return res;
 }
@@ -155,13 +164,14 @@ extern "C" __declspec(dllexport) void FreeProcessInfo(ProcessInfo* info) {
 		delete[] info->handles[i].type; info->handles[i].type = nullptr;
 	}
 
+	delete[] info->handles; info->handles = nullptr;
 	delete[] info->modules; info->modules = nullptr;
 
 	delete info;
 }
 
-extern "C" __declspec(dllexport) const ProcessInfo* GetAllProcessInfo(UINT64 processFlags, UINT64 moduleFlags, UINT64 handleFlags, size_t* size) {
-	std::vector<ProcessInfo> res = Profiler::processProfiler.GetAllProcessInfo(processFlags, moduleFlags, handleFlags);
+extern "C" __declspec(dllexport) const ProcessInfo* GetAllProcessInfo(UINT64 processFlags, UINT64 moduleFlags, UINT64 handleFlags, UINT64 threadFlags, size_t* size) {
+	std::vector<ProcessInfo> res = Profiler::processProfiler.GetAllProcessInfo(processFlags, moduleFlags, handleFlags, threadFlags);
 	*size = res.size();
 
 	ProcessInfo* arr = new ProcessInfo[*size];

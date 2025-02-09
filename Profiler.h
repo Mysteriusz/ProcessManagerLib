@@ -13,8 +13,8 @@ namespace ProfilingLib::Profilers {
 	class ProcessProfiler;
 	class Profiler {
 	public:
-		static HANDLE AddNewProcess(DWORD pid);
-		static HANDLE GetProcessHandle(DWORD pid);
+		static HANDLE* AddNewProcess(DWORD pid);
+		static HANDLE* GetProcessHandle(DWORD pid);
 		
 		static BOOL EnableDebugPrivilages();
 

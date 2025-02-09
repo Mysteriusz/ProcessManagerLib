@@ -31,7 +31,7 @@ std::string ProcessProfiler::GetProcessName(UINT& pid) {
     wchar_t processName[MAX_PATH] = { 0 };
     PDWORD plen = new DWORD(MAX_PATH);
 
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     if (!QueryFullProcessImageName(pHandle, NULL, processName, plen)) {
         if (GetLastError() == 31) {
@@ -52,7 +52,7 @@ std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
     wchar_t processName[MAX_PATH] = { 0 };  
     PDWORD plen = new DWORD(MAX_PATH);
 
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     if (!QueryFullProcessImageName(pHandle, NULL, processName, plen)) {
         if (GetLastError() == 31) {
@@ -68,7 +68,7 @@ std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
     return str;
 }
 std::string ProcessProfiler::GetProcessUser(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     HANDLE hToken;
     if (pid == 4) {
@@ -136,7 +136,7 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     return str;
 }
 std::string ProcessProfiler::GetProcessPriority(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     switch (GetPriorityClass(pHandle)) {
         case 0x00000100:
@@ -189,7 +189,7 @@ std::string ProcessProfiler::GetProcessFileVersion(UINT& pid) {
     return ver;
 }
 std::string ProcessProfiler::GetProcessArchitectureType(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     BOOL isWow64 = FALSE;
 
     if (IsWow64Process(pHandle, &isWow64)) {
@@ -202,7 +202,7 @@ std::string ProcessProfiler::GetProcessArchitectureType(UINT& pid) {
         return "ARM";
 }
 std::string ProcessProfiler::GetProcessIntegrityLevel(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     
     HANDLE hToken;
     DWORD hTokenSize;
@@ -247,24 +247,30 @@ std::string ProcessProfiler::GetProcessIntegrityLevel(UINT& pid) {
     }
 }
 std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
-    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
     if (ntdll == NULL) return "N/A";
 
     _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
     if (NtQueryInformationProcess == NULL) return "N/A";
+    
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     PROCESS_BASIC_INFORMATION pbi;
     NTSTATUS s = NtQueryInformationProcess(pHandle, 0, &pbi, sizeof(pbi), NULL);
-    if (s != 0) return "N/A";
+    if (s != 0) {
+        CloseHandle(pHandle);
+        return "N/A";
+    }
 
     PEB peb;
-    if (!ReadProcessMemory(pHandle, pbi.PebBaseAddress, &peb, sizeof(PEB), NULL))
+    if (!ReadProcessMemory(pHandle, pbi.PebBaseAddress, &peb, sizeof(PEB), NULL)) {
+        CloseHandle(pHandle);
         return "N/A";
+    }
 
     NTTYPES_RTL_USER_PROCESS_PARAMETERS params;
     if (!ReadProcessMemory(pHandle, peb.ProcessParameters, &params, sizeof(NTTYPES_RTL_USER_PROCESS_PARAMETERS), NULL)) {
+        CloseHandle(pHandle);
         return "N/A";
     }
 
@@ -273,6 +279,7 @@ std::string ProcessProfiler::GetProcessCommandLine(UINT& pid) {
 
     if (!ReadProcessMemory(pHandle, cmdStr.Buffer, buffer, cmdStr.Length, NULL)) {
         delete[] buffer;
+        CloseHandle(pHandle);
         return "N/A";
     }
 
@@ -290,7 +297,7 @@ std::string ProcessProfiler::GetProcessDescription(UINT& pid) {
 }
 
 UINT64 ProcessProfiler::GetProcessPEB(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
     if (ntdll == NULL) return 0;
@@ -305,7 +312,7 @@ UINT64 ProcessProfiler::GetProcessPEB(UINT& pid) {
     return reinterpret_cast<UINT64>(pbi.PebBaseAddress);
 }
 UINT64 ProcessProfiler::GetProcessCycleCount(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     UINT64 count;
     if (!QueryProcessCycleTime(pHandle, &count))
@@ -332,7 +339,7 @@ UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
     return 0;
 }
 
-ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT& pid) {
+ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags, UINT& pid) {
     ProcessInfo info;
     
     if (processInfoFlags == 0)
@@ -454,7 +461,7 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 modu
         ProcessHandleInfo* arr = new ProcessHandleInfo[size];
         std::copy(res.begin(), res.end(), arr);
 
-        HANDLE pHandle = Profiler::GetProcessHandle(pid);
+        HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
         info.handleCount = (UINT)size;
         info.handles = arr;
@@ -480,6 +487,16 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 modu
         info.moduleCount = (UINT)size;
         info.modules = arr;
     }
+    if (processInfoFlags & PIF_PROCESS_THREADS_INFO) {
+        std::vector<ProcessThreadInfo> res = Profiler::processProfiler.GetProcessAllThreadInfo(threadInfoFlags, pid);
+        size_t size = res.size();
+
+        ProcessThreadInfo* arr = new ProcessThreadInfo[size];
+        std::copy(res.begin(), res.end(), arr);
+
+        info.threadCount = (UINT)size;
+        info.threads = arr;
+    }
 
     SKIPALL:
     info.pid = pid;
@@ -487,7 +504,7 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 modu
     return info;
 }
 ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     FILETIME creationTime, exitTime, kernelTime, userTime;
     ProcessTimesInfo info = {};
 
@@ -517,7 +534,7 @@ ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
     return info;
 }
 ProcessMemoryInfo ProcessProfiler::GetProcessMemoryCurrentInfo(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     ProcessMemoryInfo info = {};
 
@@ -554,7 +571,7 @@ ProcessMemoryInfo ProcessProfiler::GetProcessMemoryCurrentInfo(UINT& pid) {
     return info;
 }
 ProcessIOInfo ProcessProfiler::GetProcessIOCurrentInfo(UINT& pid) {
-    HANDLE pHandle = Profiler::GetProcessHandle(pid);
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     ProcessIOInfo info = {};
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
@@ -631,8 +648,6 @@ std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT64 m
     return infos;
 }
 std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 handleInfoFlags, UINT& pid) {
-    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-
     std::vector<ProcessHandleInfo> infos;
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
@@ -640,6 +655,8 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
 
     _NtQueryInformationProcess NtQueryInformationProcess = (_NtQueryInformationProcess)GetProcAddress(ntdll, "NtQueryInformationProcess");
     if (NtQueryInformationProcess == NULL) return infos;
+    
+    HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     ULONG bufferSize = sizeof(PROCESS_HANDLE_SNAPSHOT_INFORMATION);
     PROCESS_HANDLE_SNAPSHOT_INFORMATION* phsi = (PROCESS_HANDLE_SNAPSHOT_INFORMATION*)malloc(bufferSize);
@@ -650,14 +667,18 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
 
     if (temp == nullptr) {
         free(phsi);
+        CloseHandle(pHandle);
         return infos;
     }
     phsi = temp;
 
     status = NtQueryInformationProcess(pHandle, 51, phsi, bufferSize, &bufferSize);
 
-    if (status == STATUS_INVALID_HANDLE)
+    if (status == STATUS_INVALID_HANDLE) {
+        free(phsi);
+        CloseHandle(pHandle);
         return infos;
+    }
 
     for (ULONG i = 0; i < phsi->NumberOfHandles; i++) {
         ProcessHandleInfo info;
@@ -675,6 +696,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
             
             if (temp == nullptr) {
                 free(oni);
+                CloseHandle(pHandle);
                 return infos;
             }
             oni = temp;
@@ -701,6 +723,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
 
             if (temp == nullptr) {
                 free(oti);
+                CloseHandle(pHandle);
                 return infos;
             }
             oti = temp;
@@ -728,8 +751,74 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
     CloseHandle(pHandle);
     return infos;
 }
+std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 threadInfoFlags, UINT& pid) {
+    std::vector<ProcessThreadInfo> infos;
 
-std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags) {
+    HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+    if (ntdll == NULL) return infos;
+
+    _NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)GetProcAddress(ntdll, "NtQuerySystemInformation");
+    if (NtQuerySystemInformation == NULL) return infos;
+
+    ULONG bufferSize = 0;
+    NTSTATUS status = NtQuerySystemInformation(SystemProcessInformation, NULL, bufferSize, &bufferSize);
+
+    NTTYPES_SYSTEM_PROCESS_INFORMATION* spi = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)malloc(bufferSize);
+
+    status = NtQuerySystemInformation(SystemProcessInformation, spi, bufferSize, &bufferSize);
+    
+    if (status != 0) {
+        free(spi);
+        return infos;
+    }
+    NTTYPES_SYSTEM_PROCESS_INFORMATION* current = spi;
+
+    while (current) {
+        if ((UINT)current->UniqueProcessId == pid) {
+            for (ULONG i = 0; i < current->NumberOfThreads; ++i) {
+                ProcessThreadInfo info;
+                
+                if (threadInfoFlags & TIF_THREAD_TID) {
+                    info.tid = (UINT)current->Threads[i].ClientId.UniqueThread;
+                }
+                if (threadInfoFlags & TIF_THREAD_START_ADDRESS) {
+                    info.startAddress = reinterpret_cast<UINT64>(current->Threads[i].StartAddress);
+                }
+                if (threadInfoFlags & TIF_THREAD_PRIORITY) {
+                    info.priority = (UINT)current->Threads[i].Priority;
+                }
+                if (threadInfoFlags & TIF_THREAD_CYCLES) {
+                    UINT id = (UINT)current->Threads[i].ClientId.UniqueThread;
+                    HANDLE threadHandle = OpenThread(THREAD_QUERY_INFORMATION, FALSE, id);
+
+                    if (threadHandle == NULL)
+                        continue;
+
+                    UINT64 cycles = 0;
+
+                    QueryThreadCycleTime(threadHandle, &cycles);
+                    CloseHandle(threadHandle);
+
+                    info.cyclesDelta = cycles;
+                }
+                
+                infos.push_back(info);
+            }
+            break;
+        }
+
+        if (current->NextEntryOffset == 0) {
+            break;
+        }
+
+        current = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)((char*)current + current->NextEntryOffset);
+    }
+
+    free(spi);
+    return infos;
+}
+
+std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags) {
     std::vector<ProcessInfo> infos;
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -740,7 +829,7 @@ std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFl
         {
             while (Process32Next(snapshot, &pe32))
             {
-                ProcessInfo info = GetProcessInfo(processInfoFlags, moduleInfoFlags, handleInfoFlags, (UINT&)pe32.th32ProcessID);
+                ProcessInfo info = GetProcessInfo(processInfoFlags, moduleInfoFlags, handleInfoFlags, threadInfoFlags, (UINT&)pe32.th32ProcessID);
                 infos.push_back(info);
             }
         }

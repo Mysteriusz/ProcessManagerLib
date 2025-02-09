@@ -7,5 +7,5 @@
 #include "ProcessInfo.h"
 
 struct ProcessHolder {
-	HANDLE pHandle = nullptr;
+	HANDLE* pHandle = nullptr;
 };

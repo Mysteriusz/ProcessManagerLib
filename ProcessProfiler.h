@@ -36,8 +36,9 @@ namespace ProfilingLib::Profilers {
 		
 		std::vector<ProcessModuleInfo> GetProcessAllModuleInfo(UINT64 moduleInfoFlags, UINT& pid);
 		std::vector<ProcessHandleInfo> GetProcessAllHandleInfo(UINT64 handleInfoFlags, UINT& pid);
+		std::vector<ProcessThreadInfo> GetProcessAllThreadInfo(UINT64 threadInfoFlags, UINT& pid);
 
-		ProcessInfo GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT& pid);
-		std::vector<ProcessInfo> GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags);
+		ProcessInfo GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags, UINT& pid);
+		std::vector<ProcessInfo> GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags);
 	};
 }
