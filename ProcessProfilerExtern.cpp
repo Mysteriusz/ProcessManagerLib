@@ -94,14 +94,19 @@ extern "C" _declspec(dllexport) const ProcessTimesInfo* GetProcessCurrentTimes(U
 	*res = Profiler::processProfiler.GetProcessCurrentTimes(pid);
 	return res;
 }
-extern "C" _declspec(dllexport) const ProcessMemoryInfo* GetProcessMemoryCurrentInfo(UINT pid) {
+extern "C" _declspec(dllexport) const ProcessMemoryInfo* GetProcessCurrentMemoryInfo(UINT pid) {
 	ProcessMemoryInfo* res = new ProcessMemoryInfo();
-	*res = Profiler::processProfiler.GetProcessMemoryCurrentInfo(pid);
+	*res = Profiler::processProfiler.GetProcessCurrentMemoryInfo(pid);
 	return res;
 }
-extern "C" _declspec(dllexport) const ProcessIOInfo* GetProcessIOCurrentInfo(UINT pid) {
+extern "C" _declspec(dllexport) const ProcessIOInfo* GetProcessCurrentIOInfo(UINT pid) {
 	ProcessIOInfo* res = new ProcessIOInfo();
-	*res = Profiler::processProfiler.GetProcessIOCurrentInfo(pid);
+	*res = Profiler::processProfiler.GetProcessCurrentIOInfo(pid);
+	return res;
+}
+extern "C" _declspec(dllexport) const ProcessCPUInfo* GetProcessCurrentCPUInfo(UINT pid) {
+	ProcessCPUInfo* res = new ProcessCPUInfo();
+	*res = Profiler::processProfiler.GetProcessCurrentCPUInfo(pid);
 	return res;
 }
 

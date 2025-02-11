@@ -40,6 +40,10 @@ struct ProcessIOInfo {
     UINT64 otherBytes = 0;
     UINT ioPriority = 0;
 };
+struct ProcessCPUInfo {
+    DOUBLE usage = 0;
+    UINT64 cycles = 0;
+};
 struct ProcessModuleInfo {
     char* name = nullptr;
     char* path = nullptr;
@@ -48,8 +52,8 @@ struct ProcessModuleInfo {
     UINT64 size = 0;
 };
 struct ProcessThreadInfo {
-    UINT priority = 0;
-    UINT tid = 0;
+    UINT64 priority = 0;
+    UINT64 tid = 0;
     UINT64 startAddress = 0;
     UINT64 cyclesDelta = 0;
 };
@@ -68,11 +72,11 @@ struct ProcessInfo {
     UINT pid = 0;
     UINT ppid = 0;
     UINT64 peb = 0;
-    UINT64 cycles = 0;
 
     ProcessTimesInfo timesInfo;
     ProcessMemoryInfo memoryInfo;
     ProcessIOInfo ioInfo;
+    ProcessCPUInfo cpuInfo;
 
     UINT moduleCount = 0;
     ProcessModuleInfo* modules = nullptr;

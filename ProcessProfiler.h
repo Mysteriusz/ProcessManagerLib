@@ -31,8 +31,9 @@ namespace ProfilingLib::Profilers {
 		UINT GetProcessPPID(UINT& pid);
 
 		ProcessTimesInfo GetProcessCurrentTimes(UINT& pid);
-		ProcessMemoryInfo GetProcessMemoryCurrentInfo(UINT& pid);
-		ProcessIOInfo GetProcessIOCurrentInfo(UINT& pid);
+		ProcessMemoryInfo GetProcessCurrentMemoryInfo(UINT& pid);
+		ProcessIOInfo GetProcessCurrentIOInfo(UINT& pid);
+		ProcessCPUInfo GetProcessCurrentCPUInfo(UINT& pid);
 		
 		std::vector<ProcessModuleInfo> GetProcessAllModuleInfo(UINT64 moduleInfoFlags, UINT& pid);
 		std::vector<ProcessHandleInfo> GetProcessAllHandleInfo(UINT64 handleInfoFlags, UINT& pid);

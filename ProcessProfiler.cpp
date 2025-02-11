@@ -468,14 +468,14 @@ ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 modu
         info.gdiCount = GetGuiResources(pHandle, GR_GDIOBJECTS);
         info.userCount = GetGuiResources(pHandle, GR_USEROBJECTS);
     }
-    if (processInfoFlags & PIF_PROCESS_CYCLE_COUNT) {
-        info.cycles = GetProcessCycleCount(pid);
+    if (processInfoFlags & PIF_PROCESS_CPU_INFO) {
+        info.cpuInfo = GetProcessCurrentCPUInfo(pid);
     }
     if (processInfoFlags & PIF_PROCESS_MEMORY_INFO) {
-        info.memoryInfo = GetProcessMemoryCurrentInfo(pid);
+        info.memoryInfo = GetProcessCurrentMemoryInfo(pid);
     }
     if (processInfoFlags & PIF_PROCESS_IO_INFO) {
-        info.ioInfo = GetProcessIOCurrentInfo(pid);
+        info.ioInfo = GetProcessCurrentIOInfo(pid);
     }
     if (processInfoFlags & PIF_PROCESS_MODULES_INFO) {
         std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(moduleInfoFlags, pid);
@@ -533,7 +533,7 @@ ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
 
     return info;
 }
-ProcessMemoryInfo ProcessProfiler::GetProcessMemoryCurrentInfo(UINT& pid) {
+ProcessMemoryInfo ProcessProfiler::GetProcessCurrentMemoryInfo(UINT& pid) {
     HANDLE* pHandle = Profiler::GetProcessHandle(pid);
 
     ProcessMemoryInfo info = {};
@@ -570,7 +570,7 @@ ProcessMemoryInfo ProcessProfiler::GetProcessMemoryCurrentInfo(UINT& pid) {
 
     return info;
 }
-ProcessIOInfo ProcessProfiler::GetProcessIOCurrentInfo(UINT& pid) {
+ProcessIOInfo ProcessProfiler::GetProcessCurrentIOInfo(UINT& pid) {
     HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     ProcessIOInfo info = {};
 
@@ -600,6 +600,36 @@ ProcessIOInfo ProcessProfiler::GetProcessIOCurrentInfo(UINT& pid) {
     info.otherBytes = ioc.OtherTransferCount;
 
     info.ioPriority = iph;
+
+    return info;
+}
+ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
+    ProcessCPUInfo info;
+
+    ULARGE_INTEGER now, sys, user;
+
+    FILETIME fTime;
+    ProcessTimesInfo times = GetProcessCurrentTimes(pid);
+    GetSystemTimeAsFileTime(&fTime);
+    memcpy(&now, &fTime, sizeof(FILETIME));
+    memcpy(&user, &times.userTime, sizeof(FILETIME));
+    memcpy(&sys, &times.kernelTime, sizeof(FILETIME));
+
+    static ULARGE_INTEGER prevNow = { 0 };
+    static ULARGE_INTEGER prevSys = { 0 };
+    static ULARGE_INTEGER prevUser = { 0 };
+
+    DOUBLE totalTimeDelta = (now.QuadPart - prevNow.QuadPart) / 10000000.0;
+    DOUBLE cpuTimeDelta = ((sys.QuadPart - prevSys.QuadPart) + (user.QuadPart - prevUser.QuadPart)) / 10000000.0;
+
+    DOUBLE percent = cpuTimeDelta / totalTimeDelta * 100.0;
+
+    info.usage = percent;
+    info.cycles = GetProcessCycleCount(pid);
+
+    prevNow = now;
+    prevSys = sys;
+    prevUser = user;
 
     return info;
 }
@@ -774,22 +804,22 @@ std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 t
     NTTYPES_SYSTEM_PROCESS_INFORMATION* current = spi;
 
     while (current) {
-        if ((UINT)current->UniqueProcessId == pid) {
+        if (reinterpret_cast<UINT64>(current->UniqueProcessId) == pid) {
             for (ULONG i = 0; i < current->NumberOfThreads; ++i) {
                 ProcessThreadInfo info;
                 
                 if (threadInfoFlags & TIF_THREAD_TID) {
-                    info.tid = (UINT)current->Threads[i].ClientId.UniqueThread;
+                    info.tid = reinterpret_cast<UINT64>(current->Threads[i].ClientId.UniqueThread);
                 }
                 if (threadInfoFlags & TIF_THREAD_START_ADDRESS) {
                     info.startAddress = reinterpret_cast<UINT64>(current->Threads[i].StartAddress);
                 }
                 if (threadInfoFlags & TIF_THREAD_PRIORITY) {
-                    info.priority = (UINT)current->Threads[i].Priority;
+                    info.priority = current->Threads[i].Priority;
                 }
                 if (threadInfoFlags & TIF_THREAD_CYCLES) {
-                    UINT id = (UINT)current->Threads[i].ClientId.UniqueThread;
-                    HANDLE threadHandle = OpenThread(THREAD_QUERY_INFORMATION, FALSE, id);
+                    UINT64 id = reinterpret_cast<UINT64>(current->Threads[i].ClientId.UniqueThread);
+                    HANDLE threadHandle = OpenThread(THREAD_QUERY_INFORMATION, FALSE, (DWORD)id);
 
                     if (threadHandle == NULL)
                         continue;
