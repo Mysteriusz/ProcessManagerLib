@@ -608,6 +608,8 @@ ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
 
     ULARGE_INTEGER now, sys, user;
 
+    ProcessHolder* holder = Profiler::GetProcessHolder(pid);
+
     FILETIME fTime;
     ProcessTimesInfo times = GetProcessCurrentTimes(pid);
     GetSystemTimeAsFileTime(&fTime);
@@ -615,21 +617,17 @@ ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
     memcpy(&user, &times.userTime, sizeof(FILETIME));
     memcpy(&sys, &times.kernelTime, sizeof(FILETIME));
 
-    static ULARGE_INTEGER prevNow = { 0 };
-    static ULARGE_INTEGER prevSys = { 0 };
-    static ULARGE_INTEGER prevUser = { 0 };
-
-    DOUBLE totalTimeDelta = (now.QuadPart - prevNow.QuadPart) / 10000000.0;
-    DOUBLE cpuTimeDelta = ((sys.QuadPart - prevSys.QuadPart) + (user.QuadPart - prevUser.QuadPart)) / 10000000.0;
+    DOUBLE totalTimeDelta = (now.QuadPart - holder->prevNow.QuadPart) / 10000000.0;
+    DOUBLE cpuTimeDelta = ((sys.QuadPart - holder->prevSys.QuadPart) + (user.QuadPart - holder->prevUser.QuadPart)) / 10000000.0;
 
     DOUBLE percent = cpuTimeDelta / totalTimeDelta * 100.0;
 
     info.usage = percent;
     info.cycles = GetProcessCycleCount(pid);
 
-    prevNow = now;
-    prevSys = sys;
-    prevUser = user;
+    holder->prevNow = now;
+    holder->prevSys = sys;
+    holder->prevUser = user;
 
     return info;
 }

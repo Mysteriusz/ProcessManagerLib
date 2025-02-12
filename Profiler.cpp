@@ -31,6 +31,10 @@ HANDLE* Profiler::GetProcessHandle(DWORD pid) {
     return processStates[pid].pHandle;
 }
 
+ProcessHolder* Profiler::GetProcessHolder(DWORD pid) {
+    return &processStates[pid];
+}
+
 std::string Profiler::WideStringToString(const wchar_t* str) {
     int mlen = WideCharToMultiByte(CP_UTF8, 0, str, -1, nullptr, 0, nullptr, nullptr);
     std::string multiStr(mlen, 0);
