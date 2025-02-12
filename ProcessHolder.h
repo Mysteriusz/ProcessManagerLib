@@ -9,7 +9,7 @@
 struct ProcessHolder {
 	HANDLE* pHandle = nullptr;
 
-    ULARGE_INTEGER prevNow = { 0 };
-    ULARGE_INTEGER prevSys = { 0 };
-    ULARGE_INTEGER prevUser = { 0 };
+    LARGE_INTEGER prevNow = { 0 };
+    LARGE_INTEGER prevSys = { 0 };
+    LARGE_INTEGER prevUser = { 0 };
 };

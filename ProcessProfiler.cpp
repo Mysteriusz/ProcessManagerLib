@@ -606,21 +606,22 @@ ProcessIOInfo ProcessProfiler::GetProcessCurrentIOInfo(UINT& pid) {
 ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
     ProcessCPUInfo info;
 
-    ULARGE_INTEGER now, sys, user;
-
     ProcessHolder* holder = Profiler::GetProcessHolder(pid);
-
-    FILETIME fTime;
     ProcessTimesInfo times = GetProcessCurrentTimes(pid);
-    GetSystemTimeAsFileTime(&fTime);
-    memcpy(&now, &fTime, sizeof(FILETIME));
+
+    LARGE_INTEGER now, sys, user, freq;
+    QueryPerformanceCounter(&now);
+    QueryPerformanceFrequency(&freq);
+    
+    UINT cpuCount = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
+
     memcpy(&user, &times.userTime, sizeof(FILETIME));
     memcpy(&sys, &times.kernelTime, sizeof(FILETIME));
 
-    DOUBLE totalTimeDelta = (now.QuadPart - holder->prevNow.QuadPart) / 10000000.0;
+    DOUBLE totalTimeDelta = (now.QuadPart - holder->prevNow.QuadPart) / (DOUBLE)freq.QuadPart;
     DOUBLE cpuTimeDelta = ((sys.QuadPart - holder->prevSys.QuadPart) + (user.QuadPart - holder->prevUser.QuadPart)) / 10000000.0;
 
-    DOUBLE percent = cpuTimeDelta / totalTimeDelta * 100.0;
+    DOUBLE percent = cpuTimeDelta / totalTimeDelta * 100.0 / cpuCount;
 
     info.usage = percent;
     info.cycles = GetProcessCycleCount(pid);
