@@ -9,13 +9,129 @@
 // LIBS
 #include "CpuNt.h"
 #include "TypesNt.h"
-#include <windows.h>
-#include <pdh.h>
 #include <iostream>
-
-#pragma comment(lib, "pdh.lib")
+#include <windows.h>
+#include <string.h>
 
 using namespace ProfilingLib::Profilers;
+
+std::string CpuProfiler::GetCpuName() {
+	char cpuName[0x40] = { 0 };
+	int cpuInfo[4] = { 0 };
+
+    __cpuidex(cpuInfo, 0x80000002, 0);
+    memcpy(cpuName, cpuInfo, sizeof(cpuInfo));
+
+    __cpuidex(cpuInfo, 0x80000003, 0);
+    memcpy(cpuName + 16, cpuInfo, sizeof(cpuInfo));
+
+    __cpuidex(cpuInfo, 0x80000004, 0);
+    memcpy(cpuName + 32, cpuInfo, sizeof(cpuInfo));
+
+	return std::string(cpuName);
+}
+std::string CpuProfiler::GetCpuVendor() {
+	char cpuVendor[0x12] = { 0 };
+	int cpuInfo[4] = { 0 };
+
+	__cpuidex(cpuInfo, 0, 0);
+
+	memcpy(cpuVendor, &cpuInfo[1], sizeof(int));
+	memcpy(cpuVendor + 4, &cpuInfo[3], sizeof(int));
+	memcpy(cpuVendor + 8, &cpuInfo[2], sizeof(int));
+
+	return std::string(cpuVendor);
+}
+std::string CpuProfiler::GetCpuArchitecture() {
+	HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+	if (ntdll == NULL) return "N/A";
+
+	_NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)GetProcAddress(ntdll, "NtQuerySystemInformation");
+	if (NtQuerySystemInformation == NULL) return "N/A";
+
+	ULONG len;
+	CPUNT_SYSTEM_PROCESSOR_INFORMATION spi;
+
+	NTSTATUS status = NtQuerySystemInformation((SYSTEM_INFORMATION_CLASS)1, &spi, sizeof(spi), &len);
+
+	switch (spi.ProcessorArchitecture)
+	{
+		case 0:
+			return "INTEL";
+		case 5:
+			return "ARM";
+		case 6:
+			return "IA64";
+		case 9:
+			return "AMD64";
+		case 12:
+			return "ARM64";
+		case 0xFFFF:
+			return "UNKNOWN";
+		default:
+			return "N/A";
+	}
+}
+
+UINT CpuProfiler::GetCpuModel() {
+	int cpuInfo[4] = { 0 };
+	__cpuidex(cpuInfo, 1, 0);
+
+	return (cpuInfo[0] >> 8) && 0x0f;
+}
+UINT CpuProfiler::GetCpuFamily() {
+	int cpuInfo[4] = { 0 };
+	__cpuidex(cpuInfo, 1, 0);
+
+	return (cpuInfo[0] >> 4) && 0x0f;
+}
+UINT CpuProfiler::GetCpuStepping() {
+	int cpuInfo[4] = { 0 };
+	__cpuidex(cpuInfo, 1, 0);
+
+	return cpuInfo[0] && 0x0f;
+}
+
+UINT CpuProfiler::GetCpuLevel1CacheSize() {
+	int cacheInfo[4] = { 0 };
+
+	__cpuidex(cacheInfo, 0x04, 1);
+
+	UINT lineSize = cacheInfo[1] & 0xfff;
+	UINT partitions = (cacheInfo[1] >> 12) & 0x3ff;
+	UINT ways = (cacheInfo[1] >> 22) & 0x3ff;
+	UINT sets = cacheInfo[2];
+
+	UINT coreCount = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS) / 2;
+
+	return (((ways + 1) * (partitions + 1) * (lineSize + 1) * (sets + 1)) / 1024) * coreCount;
+}
+UINT CpuProfiler::GetCpuLevel2CacheSize() {
+	int cacheInfo[4] = { 0 };
+
+	__cpuidex(cacheInfo, 0x04, 2);
+
+	UINT lineSize = cacheInfo[1] & 0xfff;
+	UINT partitions = (cacheInfo[1] >> 12) & 0x3ff;
+	UINT ways = (cacheInfo[1] >> 22) & 0x3ff;
+	UINT sets = cacheInfo[2];
+
+	UINT coreCount = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS) / 2;
+
+	return (((ways + 1) * (partitions + 1) * (lineSize + 1) * (sets + 1)) / 1024) * coreCount;
+}
+UINT CpuProfiler::GetCpuLevel3CacheSize() {
+	int cacheInfo[4] = { 0 };
+
+	__cpuidex(cacheInfo, 0x04, 3);
+
+	UINT lineSize = cacheInfo[1] & 0xfff;
+	UINT partitions = (cacheInfo[1] >> 12) & 0x3ff;
+	UINT ways = (cacheInfo[1] >> 22) & 0x3ff;
+	UINT sets = cacheInfo[2];
+
+	return (((ways + 1) * (partitions + 1) * (lineSize + 1) * (sets + 1)) / 1024);
+}
 
 DOUBLE CpuProfiler::GetCpuUsage() {
 
@@ -55,6 +171,26 @@ DOUBLE CpuProfiler::GetCpuUsage() {
 	return usage / cpuCount;
 }
 
+CpuDeviceInfo CpuProfiler::GetCpuDeviceInfo() {
+	CpuDeviceInfo info;
+
+	int cpuInfo[4] = { 0 };
+	__cpuidex(cpuInfo, 1, 0);
+
+	info.family = (cpuInfo[0] >> 8) && 0x0f;
+	info.model = (cpuInfo[0] >> 4) && 0x0f;
+	info.stepping = cpuInfo[0] && 0x0f;
+
+	info.name = _strdup(Profiler::cpuProfiler.GetCpuName().c_str());
+	info.vendor = _strdup(Profiler::cpuProfiler.GetCpuVendor().c_str());
+	info.architecture = _strdup(Profiler::cpuProfiler.GetCpuArchitecture().c_str());
+
+	info.lv1mem = GetCpuLevel1CacheSize();
+	info.lv2mem = GetCpuLevel2CacheSize();
+	info.lv3mem = GetCpuLevel3CacheSize();
+
+	return info;
+}
 CpuTimesInfo CpuProfiler::GetCpuTimes() {
 	CpuTimesInfo times;
 	

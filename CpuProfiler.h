@@ -15,7 +15,21 @@
 namespace ProfilingLib::Profilers {
 	class CpuProfiler {
 	public:
+		std::string GetCpuName();
+		std::string GetCpuVendor();
+		std::string GetCpuArchitecture();
+
+		UINT GetCpuModel();
+		UINT GetCpuFamily();
+		UINT GetCpuStepping();
+
+		UINT GetCpuLevel1CacheSize();
+		UINT GetCpuLevel2CacheSize();
+		UINT GetCpuLevel3CacheSize();
+
 		DOUBLE GetCpuUsage();
+
+		CpuDeviceInfo GetCpuDeviceInfo();
 		CpuTimesInfo GetCpuTimes();
 	};
 };
