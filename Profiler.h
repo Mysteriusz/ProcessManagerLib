@@ -2,7 +2,9 @@
 
 // STRUCTS
 #include "ProcessHolder.h"
+
 #include "ProcessInfo.h"
+#include "CpuInfo.h"
 
 // LIBS
 #include <unordered_map>
@@ -11,12 +13,17 @@
 
 namespace ProfilingLib::Profilers {
 	class ProcessProfiler;
+	class CpuProfiler;
+
 	class Profiler {
 	public:
 		static HANDLE* AddNewProcess(DWORD pid);
 		static HANDLE* GetProcessHandle(DWORD pid);
 
 		static ProcessHolder* GetProcessHolder(DWORD pid);
+		
+		static FILETIME AddTimes(FILETIME t1, FILETIME t2);
+		static FILETIME SubtractTimes(FILETIME t1, FILETIME t2);
 
 		static BOOL EnableDebugPrivilages();
 
@@ -26,6 +33,8 @@ namespace ProfilingLib::Profilers {
 		static std::string GetFileDescription(const wchar_t* path);
 
 		static std::unordered_map<DWORD, ProcessHolder> processStates;
+		
 		static ProcessProfiler processProfiler;
+		static CpuProfiler cpuProfiler;
 	};
 }

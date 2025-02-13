@@ -29,6 +29,7 @@ namespace ProfilingLib::Profilers {
 		UINT64 GetProcessPEB(UINT& pid);
 		UINT64 GetProcessCycleCount(UINT& pid);
 		UINT GetProcessPPID(UINT& pid);
+		UINT GetProcessStatus(UINT& pid);
 
 		ProcessTimesInfo GetProcessCurrentTimes(UINT& pid);
 		ProcessMemoryInfo GetProcessCurrentMemoryInfo(UINT& pid);

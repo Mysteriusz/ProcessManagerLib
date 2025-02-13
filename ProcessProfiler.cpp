@@ -7,13 +7,14 @@
 #include "ProcessInfo.h"
 
 // LIBS
+#include "ProcessNt.h"
+#include "TypesNt.h"
 #include "windows.h"
 #include "processFlags.h"
 #include "Tlhelp32.h"
 #include "processthreadsapi.h"
 #include "ntstatus.h"
 #include "winbase.h"
-#include "NtTypes.h"
 #include "winver.h"
 #include "Winternl.h"
 #include "psapi.h"
@@ -320,6 +321,7 @@ UINT64 ProcessProfiler::GetProcessCycleCount(UINT& pid) {
 
     return count;
 }
+
 UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (snapshot != INVALID_HANDLE_VALUE)
@@ -337,6 +339,16 @@ UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
         CloseHandle(snapshot);
     }
     return 0;
+}
+UINT ProcessProfiler::GetProcessStatus(UINT& pid) {
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
+    
+    DWORD exitCode;
+    if (!GetExitCodeProcess(pHandle, &exitCode)) {
+        return UINT_MAX;
+    }
+
+    return exitCode;
 }
 
 ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags, UINT& pid) {
@@ -511,19 +523,7 @@ ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
     if (!GetProcessTimes(pHandle, &creationTime, &exitTime, &kernelTime, &userTime))
         return info;
 
-    FILETIME totalTime;
-
-    ULARGE_INTEGER tu, tl, tr;
-    tl.LowPart = userTime.dwLowDateTime;
-    tl.HighPart = userTime.dwHighDateTime;
-
-    tu.LowPart = kernelTime.dwLowDateTime;
-    tu.HighPart = kernelTime.dwHighDateTime;
-
-    tr.QuadPart = tl.QuadPart + tu.QuadPart;
-
-    totalTime.dwLowDateTime = tr.LowPart;
-    totalTime.dwHighDateTime = tr.HighPart;
+    FILETIME totalTime = Profiler::AddTimes(userTime, kernelTime);
 
     info.creationTime = creationTime;
     info.exitTime = exitTime;

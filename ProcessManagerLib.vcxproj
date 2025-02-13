@@ -19,13 +19,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CpuProfiler.cpp" />
+    <ClCompile Include="CpuProfilerExtern.cpp" />
     <ClCompile Include="ProcessProfiler.cpp" />
     <ClCompile Include="ProcessProfilerExtern.cpp" />
     <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="ProfilerExtern.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NtTypes.h" />
+    <ClInclude Include="CpuFlags.h" />
+    <ClInclude Include="CpuInfo.h" />
+    <ClInclude Include="CpuNt.h" />
+    <ClInclude Include="CpuProfiler.h" />
+    <ClInclude Include="TypesNt.h" />
+    <ClInclude Include="ProcessNt.h" />
     <ClInclude Include="ProcessFlags.h" />
     <ClInclude Include="ProcessHolder.h" />
     <ClInclude Include="ProcessInfo.h" />

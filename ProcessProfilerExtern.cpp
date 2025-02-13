@@ -88,6 +88,12 @@ extern "C" _declspec(dllexport) const UINT* GetProcessPPID(UINT pid) {
 
 	return &staticRes;
 }
+extern "C" _declspec(dllexport) const UINT* GetProcessStatus(UINT pid) {
+	UINT res = Profiler::processProfiler.GetProcessStatus(pid);
+	static UINT staticRes; staticRes = res;
+
+	return &staticRes;
+}
 
 extern "C" _declspec(dllexport) const ProcessTimesInfo* GetProcessCurrentTimes(UINT pid) {
 	ProcessTimesInfo* res = new ProcessTimesInfo();

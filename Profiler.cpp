@@ -2,6 +2,7 @@
 
 // PROFILERS
 #include "ProcessProfiler.h"
+#include "CpuProfiler.h"
 #include "Profiler.h"
 
 // STRUCTS
@@ -12,6 +13,8 @@
 using namespace ProfilingLib::Profilers;
 
 ProcessProfiler Profiler::processProfiler;
+CpuProfiler Profiler::cpuProfiler;
+
 std::unordered_map<DWORD, ProcessHolder> Profiler::processStates;
 
 HANDLE* Profiler::AddNewProcess(DWORD pid) {
@@ -33,6 +36,41 @@ HANDLE* Profiler::GetProcessHandle(DWORD pid) {
 
 ProcessHolder* Profiler::GetProcessHolder(DWORD pid) {
     return &processStates[pid];
+}
+
+FILETIME Profiler::AddTimes(FILETIME t1, FILETIME t2) {
+    FILETIME totalTime;
+    LARGE_INTEGER tl, tu, tr;
+
+    tl.LowPart = t1.dwLowDateTime;
+    tl.HighPart = t1.dwHighDateTime;
+
+    tu.LowPart = t2.dwLowDateTime;
+    tu.HighPart = t2.dwHighDateTime;
+
+    tr.QuadPart = tl.QuadPart + tu.QuadPart;
+
+    totalTime.dwLowDateTime = tr.LowPart;
+    totalTime.dwHighDateTime = tr.HighPart;
+
+    return totalTime;
+}
+FILETIME Profiler::SubtractTimes(FILETIME t1, FILETIME t2) {
+    FILETIME totalTime;
+    LARGE_INTEGER tl, tu, tr;
+
+    tl.LowPart = t1.dwLowDateTime;
+    tl.HighPart = t1.dwHighDateTime;
+
+    tu.LowPart = t2.dwLowDateTime;
+    tu.HighPart = t2.dwHighDateTime;
+
+    tr.QuadPart = tl.QuadPart - tu.QuadPart;
+
+    totalTime.dwLowDateTime = tr.LowPart;
+    totalTime.dwHighDateTime = tr.HighPart;
+
+    return totalTime;
 }
 
 std::string Profiler::WideStringToString(const wchar_t* str) {
