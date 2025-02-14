@@ -23,13 +23,20 @@ namespace ProfilingLib::Profilers {
 		UINT GetCpuFamily();
 		UINT GetCpuStepping();
 
-		UINT GetCpuLevel1CacheSize();
-		UINT GetCpuLevel2CacheSize();
-		UINT GetCpuLevel3CacheSize();
-
 		DOUBLE GetCpuUsage();
+		DOUBLE GetCpuBaseFrequency();
+		DOUBLE GetCpuMaxFrequency();
 
-		CpuDeviceInfo GetCpuDeviceInfo();
-		CpuTimesInfo GetCpuTimes();
+		UINT GetCpuThreadCount();
+		UINT GetCpuHandleCount();
+
+		BOOL IsCpuVirtualization();
+		BOOL IsCpuHyperThreading();
+
+		std::vector<CpuCacheInfo> GetCpuAllLevelsCacheInfo();
+
+		CpuSystemInfo GetCpuSystemInfo();
+		CpuModelInfo GetCpuModelInfo();
+		CpuTimesInfo GetCpuTimesInfo();
 	};
 };

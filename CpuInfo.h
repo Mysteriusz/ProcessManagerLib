@@ -13,7 +13,7 @@ struct CpuTimesInfo {
 	FILETIME interruptTime = {0};
 	FILETIME userTime = {0};
 };
-struct CpuDeviceInfo {
+struct CpuModelInfo {
 	char* name;
 	char* vendor;
 	char* architecture;
@@ -21,27 +21,51 @@ struct CpuDeviceInfo {
 	UINT model;
 	UINT family;
 	UINT stepping;
+};
+struct CpuCacheInfo {
+	// EAX
+	UINT maxCores;
+	UINT maxThreads;
+	BOOL associative;
+	BOOL selfInitializing;
+	UINT level;
+	UINT type;
+	
+	// EBX
+	UINT ways;
+	UINT lineCount;
+	UINT lineSize;
 
-	UINT lv1mem;
-	UINT lv2mem;
-	UINT lv3mem;
+	// ECX
+	UINT setCount;
+
+	// EDX
+	BOOL complexIndexing;
+	BOOL inclusive;
+	BOOL wbinvd;
+
+	// CUSTOM
+	UINT size;
+};
+struct CpuSystemInfo {
+	UINT sockets;
+	UINT cores;
+	UINT threads;
+	UINT numaCount;
 };
 struct CpuInfo {
 	DOUBLE usage;
-	DOUBLE currentfreq;
 	DOUBLE baseFreq;
 	DOUBLE maxFreq;
-	DOUBLE temp;
-	
-	UINT sockets;
-	UINT cores;
-	UINT processors;
+
 	UINT threads;
-	UINT entries;
+	UINT handles;
 	
 	BOOL virtualization;
 	BOOL hyperThreading;
-
-	CpuDeviceInfo deviceInfo;
+	
+	CpuSystemInfo sysInfo;
+	CpuCacheInfo cacheInfo;
+	CpuModelInfo modelInfo;
 	CpuTimesInfo times;
 };

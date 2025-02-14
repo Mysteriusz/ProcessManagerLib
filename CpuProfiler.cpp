@@ -92,50 +92,67 @@ UINT CpuProfiler::GetCpuStepping() {
 	return cpuInfo[0] && 0x0f;
 }
 
-UINT CpuProfiler::GetCpuLevel1CacheSize() {
-	int cacheInfo[4] = { 0 };
+UINT CpuProfiler::GetCpuThreadCount() {
+	HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+	if (ntdll == NULL) return 0;
 
-	__cpuidex(cacheInfo, 0x04, 1);
+	_NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)GetProcAddress(ntdll, "NtQuerySystemInformation");
 
-	UINT lineSize = cacheInfo[1] & 0xfff;
-	UINT partitions = (cacheInfo[1] >> 12) & 0x3ff;
-	UINT ways = (cacheInfo[1] >> 22) & 0x3ff;
-	UINT sets = cacheInfo[2];
+	ULONG len;
+	NTSTATUS status = NtQuerySystemInformation(SystemProcessInformation, nullptr, 0, &len);
 
-	UINT coreCount = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS) / 2;
+	NTTYPES_SYSTEM_PROCESS_INFORMATION* spi = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)malloc(len);
 
-	return (((ways + 1) * (partitions + 1) * (lineSize + 1) * (sets + 1)) / 1024) * coreCount;
+	status = NtQuerySystemInformation(SystemProcessInformation, spi, len, &len);
+
+	UINT threads = 0;
+
+	NTTYPES_SYSTEM_PROCESS_INFORMATION* current = spi;
+	while (current) {
+
+		threads += current->NumberOfThreads;
+
+		if (current->NextEntryOffset == 0) {
+			break;
+		}
+
+		current = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)((char*)current + current->NextEntryOffset);
+	}
+	
+	return threads;
 }
-UINT CpuProfiler::GetCpuLevel2CacheSize() {
-	int cacheInfo[4] = { 0 };
+UINT CpuProfiler::GetCpuHandleCount() {
+	HMODULE ntdll = GetModuleHandleA("ntdll.dll");
+	if (ntdll == NULL) return 0;
 
-	__cpuidex(cacheInfo, 0x04, 2);
+	_NtQuerySystemInformation NtQuerySystemInformation = (_NtQuerySystemInformation)GetProcAddress(ntdll, "NtQuerySystemInformation");
 
-	UINT lineSize = cacheInfo[1] & 0xfff;
-	UINT partitions = (cacheInfo[1] >> 12) & 0x3ff;
-	UINT ways = (cacheInfo[1] >> 22) & 0x3ff;
-	UINT sets = cacheInfo[2];
+	ULONG len;
+	NTSTATUS status = NtQuerySystemInformation(SystemProcessInformation, nullptr, 0, &len);
 
-	UINT coreCount = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS) / 2;
+	NTTYPES_SYSTEM_PROCESS_INFORMATION* spi = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)malloc(len);
 
-	return (((ways + 1) * (partitions + 1) * (lineSize + 1) * (sets + 1)) / 1024) * coreCount;
-}
-UINT CpuProfiler::GetCpuLevel3CacheSize() {
-	int cacheInfo[4] = { 0 };
+	status = NtQuerySystemInformation(SystemProcessInformation, spi, len, &len);
 
-	__cpuidex(cacheInfo, 0x04, 3);
+	UINT handles = 0;
 
-	UINT lineSize = cacheInfo[1] & 0xfff;
-	UINT partitions = (cacheInfo[1] >> 12) & 0x3ff;
-	UINT ways = (cacheInfo[1] >> 22) & 0x3ff;
-	UINT sets = cacheInfo[2];
+	NTTYPES_SYSTEM_PROCESS_INFORMATION* current = spi;
+	while (current) {
 
-	return (((ways + 1) * (partitions + 1) * (lineSize + 1) * (sets + 1)) / 1024);
+		handles += current->HandleCount;
+
+		if (current->NextEntryOffset == 0) {
+			break;
+		}
+
+		current = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)((char*)current + current->NextEntryOffset);
+	}
+
+	return handles;
 }
 
 DOUBLE CpuProfiler::GetCpuUsage() {
-
-	CpuTimesInfo times = GetCpuTimes();
+	CpuTimesInfo times = GetCpuTimesInfo();
 	
 	static ULARGE_INTEGER prevIdleTime, prevKernelTime, prevUserTime;
 	ULARGE_INTEGER idleTime, kernelTime, userTime;
@@ -170,9 +187,74 @@ DOUBLE CpuProfiler::GetCpuUsage() {
 
 	return usage / cpuCount;
 }
+DOUBLE CpuProfiler::GetCpuBaseFrequency() {
+	int freqInfo[4] = {0};
+	__cpuidex(freqInfo, 0x16, 0);
 
-CpuDeviceInfo CpuProfiler::GetCpuDeviceInfo() {
-	CpuDeviceInfo info;
+	return static_cast<DOUBLE>(freqInfo[0]) / 1000;
+}
+DOUBLE CpuProfiler::GetCpuMaxFrequency() {
+	int freqInfo[4] = { 0 };
+	__cpuidex(freqInfo, 0x16, 0);
+
+	return static_cast<DOUBLE>(freqInfo[1]) / 1000;
+}
+
+BOOL CpuProfiler::IsCpuVirtualization() {
+	int cpuInfo[4] = { 0 };
+
+	__cpuidex(cpuInfo, 0x01, 0);
+	
+	return (cpuInfo[2] & (1 << 5)) != 0;
+}
+BOOL CpuProfiler::IsCpuHyperThreading() {
+	int cpuInfo[4] = { 0 };
+
+	__cpuidex(cpuInfo, 0x01, 0);
+
+	return (cpuInfo[3] & (1 << 28)) != 0;
+}
+
+CpuSystemInfo CpuProfiler::GetCpuSystemInfo() {
+	CpuSystemInfo info = {0};
+	DWORD len = 0;
+
+	GetLogicalProcessorInformationEx(RelationAll, NULL, &len);
+	SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX* slpie = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)malloc(len);
+	GetLogicalProcessorInformationEx(RelationAll, slpie, &len);
+
+	DWORD offset = 0;
+	while (offset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX) <= len) {
+		SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX* local = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)((BYTE*)slpie + offset);
+
+		if (local == nullptr)
+			break;
+
+		switch (local->Relationship)
+		{
+			case RelationProcessorCore:
+				info.cores++;
+				info.threads += __popcnt(static_cast<unsigned int>(local->Processor.GroupMask->Mask));
+				break;
+			case RelationProcessorPackage:
+				info.sockets++;
+				break;
+			case RelationNumaNode:
+				info.numaCount++;
+				break;
+			default:
+				break;
+		}
+
+		offset += local->Size;
+	}
+
+	free(slpie);
+
+	return info;
+}
+CpuModelInfo CpuProfiler::GetCpuModelInfo() {
+	CpuModelInfo info;
 
 	int cpuInfo[4] = { 0 };
 	__cpuidex(cpuInfo, 1, 0);
@@ -185,13 +267,9 @@ CpuDeviceInfo CpuProfiler::GetCpuDeviceInfo() {
 	info.vendor = _strdup(Profiler::cpuProfiler.GetCpuVendor().c_str());
 	info.architecture = _strdup(Profiler::cpuProfiler.GetCpuArchitecture().c_str());
 
-	info.lv1mem = GetCpuLevel1CacheSize();
-	info.lv2mem = GetCpuLevel2CacheSize();
-	info.lv3mem = GetCpuLevel3CacheSize();
-
 	return info;
 }
-CpuTimesInfo CpuProfiler::GetCpuTimes() {
+CpuTimesInfo CpuProfiler::GetCpuTimesInfo() {
 	CpuTimesInfo times;
 	
 	HMODULE ntdll = GetModuleHandleA("ntdll.dll");
@@ -214,4 +292,48 @@ CpuTimesInfo CpuProfiler::GetCpuTimes() {
 	times.workTime = totalTime;
 
 	return times;
+}
+
+std::vector<CpuCacheInfo> CpuProfiler::GetCpuAllLevelsCacheInfo() {
+	std::vector<CpuCacheInfo> infos;
+
+	int cacheInfo[4] = { 0 };
+	int level = 0;
+
+	while (true) {
+		__cpuidex(cacheInfo, 0x04, level);
+
+		if (cacheInfo[0] == 0) break;
+
+		CpuCacheInfo info;
+
+		// EAX
+		info.type = cacheInfo[0] & 0x0f;
+		info.level = (cacheInfo[0] >> 5) & 0x07;
+		info.selfInitializing = (cacheInfo[0] >> 8) & 0x01;
+		info.associative = (cacheInfo[0] >> 9) & 0x01;
+		info.maxThreads = ((cacheInfo[0] >> 14) & 0xfff) + 1;
+		info.maxCores = ((cacheInfo[0] >> 26) & 0x3f) + 1;
+
+		// EBX
+		info.lineSize = (cacheInfo[1] & 0xfff) + 1;
+		info.lineCount = ((cacheInfo[1] >> 12) & 0x3ff) + 1;
+		info.ways = ((cacheInfo[1] >> 22) & 0x3ff) + 1;
+
+		// ECX
+		info.setCount = (cacheInfo[2] & 0xffffffff) + 1;
+
+		// EDX
+		info.wbinvd = cacheInfo[3] & 0x01;
+		info.inclusive = (cacheInfo[3] >> 1) & 0x01;
+		info.complexIndexing = (cacheInfo[3] >> 2) & 0x01;
+
+		// CUSTOM
+		info.size = info.lineSize * info.lineCount * info.ways * info.setCount;
+
+		infos.push_back(info);
+		level++;
+	}
+
+	return infos;
 }

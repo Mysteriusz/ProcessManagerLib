@@ -1,9 +1,9 @@
 // PROFILERS
 #include "ProcessProfiler.h"
-#include "CpuProfiler.h";
+#include "CpuProfiler.h"
 
 // STRUCTS
-#include "CpuInfo.h";
+#include "CpuInfo.h"
 
 // LIBS
 
@@ -47,34 +47,72 @@ extern "C" _declspec(dllexport) const UINT* GetCpuStepping() {
 	return &staticRes;
 }
 
-extern "C" _declspec(dllexport) const UINT* GetCpuLevel1CacheSize() {
-	UINT res = Profiler::cpuProfiler.GetCpuLevel1CacheSize();
-	static UINT staticRes; staticRes = res;
-
-	return &staticRes;
-}
-extern "C" _declspec(dllexport) const UINT* GetCpuLevel2CacheSize() {
-	UINT res = Profiler::cpuProfiler.GetCpuLevel2CacheSize();
-	static UINT staticRes; staticRes = res;
-
-	return &staticRes;
-}
-extern "C" _declspec(dllexport) const UINT* GetCpuLevel3CacheSize() {
-	UINT res = Profiler::cpuProfiler.GetCpuLevel3CacheSize();
-	static UINT staticRes; staticRes = res;
-
-	return &staticRes;
-}
-
 extern "C" _declspec(dllexport) const DOUBLE* GetCpuUsage() {
 	DOUBLE res = Profiler::cpuProfiler.GetCpuUsage();
 	static DOUBLE staticRes; staticRes = res;
 
 	return &staticRes;
 }
+extern "C" _declspec(dllexport) const DOUBLE* GetCpuBaseFrequency() {
+	DOUBLE res = Profiler::cpuProfiler.GetCpuBaseFrequency();
+	static DOUBLE staticRes; staticRes = res;
 
-extern "C" _declspec(dllexport) const CpuTimesInfo* GetCpuTimes() {
+	return &staticRes;
+}
+extern "C" _declspec(dllexport) const DOUBLE* GetCpuMaxFrequency() {
+	DOUBLE res = Profiler::cpuProfiler.GetCpuMaxFrequency();
+	static DOUBLE staticRes; staticRes = res;
+
+	return &staticRes;
+}
+
+extern "C" _declspec(dllexport) const UINT* GetCpuThreadCount() {
+	UINT res = Profiler::cpuProfiler.GetCpuThreadCount();
+	static UINT staticRes; staticRes = res;
+	
+	return &staticRes;
+}
+extern "C" _declspec(dllexport) const UINT* GetCpuHandleCount() {
+	UINT res = Profiler::cpuProfiler.GetCpuHandleCount();
+	static UINT staticRes; staticRes = res;
+
+	return &staticRes;
+}
+
+extern "C" _declspec(dllexport) const BOOL* IsCpuVirtualization() {
+	BOOL res = Profiler::cpuProfiler.IsCpuVirtualization();
+	static BOOL staticRes; staticRes = res;
+	return &staticRes;
+}
+extern "C" _declspec(dllexport) const BOOL* IsCpuHyperThreading() {
+	BOOL res = Profiler::cpuProfiler.IsCpuHyperThreading();
+	static BOOL staticRes; staticRes = res;
+	return &staticRes;
+
+}
+
+extern "C" _declspec(dllexport) const CpuTimesInfo* GetCpuTimesInfo() {
 	CpuTimesInfo* res = new CpuTimesInfo();
-	*res = Profiler::cpuProfiler.GetCpuTimes();
+	*res = Profiler::cpuProfiler.GetCpuTimesInfo();
 	return res;
+}
+extern "C" _declspec(dllexport) const CpuModelInfo* GetCpuModelInfo() {
+	CpuModelInfo* res = new CpuModelInfo();
+	*res = Profiler::cpuProfiler.GetCpuModelInfo();
+	return res;
+}
+extern "C" _declspec(dllexport) const CpuSystemInfo* GetCpuSystemInfo() {
+	CpuSystemInfo* res = new CpuSystemInfo();
+	*res = Profiler::cpuProfiler.GetCpuSystemInfo();
+	return res;
+}
+
+extern "C" _declspec(dllexport) const CpuCacheInfo* GetCpuAllLevelsCacheInfo(size_t* size) {
+	std::vector<CpuCacheInfo> res = Profiler::cpuProfiler.GetCpuAllLevelsCacheInfo();
+	*size = res.size();
+
+	CpuCacheInfo* arr = new CpuCacheInfo[*size];
+	std::copy(res.begin(), res.end(), arr);
+
+	return arr;
 }
