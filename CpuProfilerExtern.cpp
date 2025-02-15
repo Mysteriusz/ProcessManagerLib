@@ -91,6 +91,11 @@ extern "C" _declspec(dllexport) const BOOL* IsCpuHyperThreading() {
 
 }
 
+extern "C" _declspec(dllexport) const CpuInfo* GetCpuInfo(CPU_CIF_FLAGS cif, CPU_SIF_FLAGS sif, CPU_MIF_FLAGS mif, CPU_TIF_FLAGS tif, CPU_HIF_FLAGS hif) {
+	CpuInfo* res = new CpuInfo();
+	*res = Profiler::cpuProfiler.GetCpuInfo(cif, sif, mif, tif, hif);
+	return res;
+}
 extern "C" _declspec(dllexport) const CpuTimesInfo* GetCpuTimesInfo(CPU_TIF_FLAGS tif) {
 	CpuTimesInfo* res = new CpuTimesInfo();
 	*res = Profiler::cpuProfiler.GetCpuTimesInfo(tif);
@@ -114,4 +119,16 @@ extern "C" _declspec(dllexport) const CpuCacheInfo* GetCpuAllLevelsCacheInfo(CPU
 	std::copy(res.begin(), res.end(), arr);
 
 	return arr;
+}
+
+extern "C" _declspec(dllexport) void FreeCpuInfo(CpuInfo* info) {
+	if (!info) return;
+	
+	delete[] info->cacheInfo;
+
+	delete[] info->modelInfo.name;
+	delete[] info->modelInfo.vendor;
+	delete[] info->modelInfo.architecture;
+
+	delete info;
 }

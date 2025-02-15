@@ -120,6 +120,7 @@ UINT CpuProfiler::GetCpuThreadCount() {
 		current = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)((char*)current + current->NextEntryOffset);
 	}
 	
+	free(spi);
 	return threads;
 }
 UINT CpuProfiler::GetCpuHandleCount() {
@@ -149,6 +150,7 @@ UINT CpuProfiler::GetCpuHandleCount() {
 		current = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)((char*)current + current->NextEntryOffset);
 	}
 
+	free(spi);
 	return handles;
 }
 
@@ -310,7 +312,6 @@ CpuSystemInfo CpuProfiler::GetCpuSystemInfo(CPU_SIF_FLAGS sif) {
 	}
 
 	free(slpie);
-
 	return info;
 }
 CpuModelInfo CpuProfiler::GetCpuModelInfo(CPU_MIF_FLAGS mif) {
@@ -321,7 +322,7 @@ CpuModelInfo CpuProfiler::GetCpuModelInfo(CPU_MIF_FLAGS mif) {
 	}
 
 	int cpuInfo[4] = { 0 };
-	__cpuidex(cpuInfo, 1, 0);
+	__cpuidex(cpuInfo, 0x01, 0);
 
 	if (mif & CPU_MIF_NAME) {
 		info.name = _strdup(Profiler::cpuProfiler.GetCpuName().c_str());

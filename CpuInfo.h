@@ -64,10 +64,10 @@ struct CpuInfo {
 	BOOL virtualization = 0;
 	BOOL hyperThreading = 0;
 
-	UINT cacheCount = 0;
-	CpuCacheInfo* cacheInfo = nullptr;
-
 	CpuSystemInfo sysInfo;
 	CpuModelInfo modelInfo;
 	CpuTimesInfo timesInfo;
+	
+	UINT cacheCount = 0;
+	CpuCacheInfo* cacheInfo = nullptr;
 };
