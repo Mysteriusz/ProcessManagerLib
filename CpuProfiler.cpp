@@ -8,6 +8,7 @@
 
 // LIBS
 #include "CpuNt.h"
+#include "CpuFlags.h"
 #include "TypesNt.h"
 #include <iostream>
 #include <windows.h>
@@ -152,7 +153,7 @@ UINT CpuProfiler::GetCpuHandleCount() {
 }
 
 DOUBLE CpuProfiler::GetCpuUsage() {
-	CpuTimesInfo times = GetCpuTimesInfo();
+	CpuTimesInfo times = GetCpuTimesInfo(CPU_TIF_ALL);
 	
 	static ULARGE_INTEGER prevIdleTime, prevKernelTime, prevUserTime;
 	ULARGE_INTEGER idleTime, kernelTime, userTime;
@@ -215,9 +216,60 @@ BOOL CpuProfiler::IsCpuHyperThreading() {
 	return (cpuInfo[3] & (1 << 28)) != 0;
 }
 
-CpuSystemInfo CpuProfiler::GetCpuSystemInfo() {
-	CpuSystemInfo info = {0};
+CpuInfo CpuProfiler::GetCpuInfo(CPU_CIF_FLAGS cif, CPU_SIF_FLAGS sif, CPU_MIF_FLAGS mif, CPU_TIF_FLAGS tif, CPU_HIF_FLAGS hif) {
+	CpuInfo info;
+
+	if (cif == 0) {
+		return info;
+	}
+
+	if (cif & CPU_CIF_USAGE) {
+		info.usage = GetCpuUsage();
+	}
+	if (cif & CPU_CIF_BASE_FREQ) {
+		info.baseFreq = GetCpuBaseFrequency();
+	}
+	if (cif & CPU_CIF_MAX_FREQ) {
+		info.maxFreq = GetCpuMaxFrequency();
+	}
+	if (cif & CPU_CIF_THREADS) {
+		info.threads = GetCpuThreadCount();
+	}
+	if (cif & CPU_CIF_HANDLES) {
+		info.handles = GetCpuHandleCount();
+	}
+	if (cif & CPU_CIF_VIRTUALIZATION) {
+		info.virtualization = IsCpuVirtualization();
+	}
+	if (cif & CPU_CIF_HYPER_THREADING) {
+		info.hyperThreading = IsCpuHyperThreading();
+	}
+	if (cif & CPU_CIF_CACHE_INFO) {
+		std::vector<CpuCacheInfo> cacheInfo = GetCpuAllLevelsCacheInfo(hif);
+		size_t size = cacheInfo.size();
+		info.cacheInfo = new CpuCacheInfo[size];
+		info.cacheCount = static_cast<UINT>(size);
+		std::copy(cacheInfo.begin(), cacheInfo.end(), info.cacheInfo);
+	}
+	if (cif & CPU_CIF_SYS_INFO) {
+		info.sysInfo = GetCpuSystemInfo(sif);
+	}
+	if (cif & CPU_CIF_MODEL_INFO) {
+		info.modelInfo = GetCpuModelInfo(mif);
+	}
+	if (cif & CPU_CIF_TIMES_INFO) {
+		info.timesInfo = GetCpuTimesInfo(tif);
+	}
+
+	return info;
+}
+CpuSystemInfo CpuProfiler::GetCpuSystemInfo(CPU_SIF_FLAGS sif) {
+	CpuSystemInfo info;
 	DWORD len = 0;
+
+	if (sif == 0) {
+		return info;
+	}
 
 	GetLogicalProcessorInformationEx(RelationAll, NULL, &len);
 	SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX* slpie = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*)malloc(len);
@@ -233,14 +285,22 @@ CpuSystemInfo CpuProfiler::GetCpuSystemInfo() {
 		switch (local->Relationship)
 		{
 			case RelationProcessorCore:
-				info.cores++;
-				info.threads += __popcnt(static_cast<unsigned int>(local->Processor.GroupMask->Mask));
+				if (sif & CPU_SIF_CORES) {
+					info.cores++;
+				}
+				if (sif & CPU_SIF_THREADS) {
+					info.threads += __popcnt(static_cast<unsigned int>(local->Processor.GroupMask->Mask));
+				}
 				break;
 			case RelationProcessorPackage:
-				info.sockets++;
+				if (sif & CPU_SIF_SOCKETS) {
+					info.sockets++;
+				}
 				break;
 			case RelationNumaNode:
-				info.numaCount++;
+				if (sif & CPU_SIF_NUMA_COUNT) {
+					info.numaCount++;
+				}
 				break;
 			default:
 				break;
@@ -253,25 +313,44 @@ CpuSystemInfo CpuProfiler::GetCpuSystemInfo() {
 
 	return info;
 }
-CpuModelInfo CpuProfiler::GetCpuModelInfo() {
+CpuModelInfo CpuProfiler::GetCpuModelInfo(CPU_MIF_FLAGS mif) {
 	CpuModelInfo info;
+
+	if (mif == 0) {
+		return info;
+	}
 
 	int cpuInfo[4] = { 0 };
 	__cpuidex(cpuInfo, 1, 0);
 
-	info.family = (cpuInfo[0] >> 8) && 0x0f;
-	info.model = (cpuInfo[0] >> 4) && 0x0f;
-	info.stepping = cpuInfo[0] && 0x0f;
-
-	info.name = _strdup(Profiler::cpuProfiler.GetCpuName().c_str());
-	info.vendor = _strdup(Profiler::cpuProfiler.GetCpuVendor().c_str());
-	info.architecture = _strdup(Profiler::cpuProfiler.GetCpuArchitecture().c_str());
-
+	if (mif & CPU_MIF_NAME) {
+		info.name = _strdup(Profiler::cpuProfiler.GetCpuName().c_str());
+	}
+	if (mif & CPU_MIF_MODEL) {
+		info.model = (cpuInfo[0] >> 4) && 0x0f;
+	}
+	if (mif & CPU_MIF_STEPPING) {
+		info.stepping = cpuInfo[0] && 0x0f;
+	}
+	if (mif & CPU_MIF_FAMILY) {
+		info.family = (cpuInfo[0] >> 8) && 0x0f;
+	}
+	if (mif & CPU_MIF_VENDOR) {
+		info.vendor = _strdup(Profiler::cpuProfiler.GetCpuVendor().c_str());
+	}
+	if (mif & CPU_MIF_ARCHITECTURE) {
+		info.architecture = _strdup(Profiler::cpuProfiler.GetCpuArchitecture().c_str());
+	}
+	
 	return info;
 }
-CpuTimesInfo CpuProfiler::GetCpuTimesInfo() {
+CpuTimesInfo CpuProfiler::GetCpuTimesInfo(CPU_TIF_FLAGS tif) {
 	CpuTimesInfo times;
 	
+	if (tif == 0) {
+		return times;
+	}
+
 	HMODULE ntdll = GetModuleHandleA("ntdll.dll");
 	if (ntdll == NULL) return times;
 
@@ -282,54 +361,100 @@ CpuTimesInfo CpuProfiler::GetCpuTimesInfo() {
 	ULONG len;
 	NTSTATUS status = NtQuerySystemInformation((SYSTEM_INFORMATION_CLASS)8, &sppi, sizeof(sppi), &len);
 
-	memcpy(&times.dpcTime, &sppi.DpcTime, sizeof(FILETIME));
-	memcpy(&times.idleTime, &sppi.IdleTime, sizeof(FILETIME));
-	memcpy(&times.interruptTime, &sppi.InterruptTime, sizeof(FILETIME));
-	memcpy(&times.kernelTime, &sppi.KernelTime, sizeof(FILETIME));
-	memcpy(&times.userTime, &sppi.UserTime, sizeof(FILETIME));
-
-	FILETIME totalTime = Profiler::AddTimes(times.userTime, times.kernelTime);
-	times.workTime = totalTime;
-
+	if (tif & CPU_TIF_DPC_TIME) {
+		memcpy(&times.dpcTime, &sppi.DpcTime, sizeof(FILETIME));
+	}
+	if (tif & CPU_TIF_IDLE_TIME) {
+		memcpy(&times.idleTime, &sppi.IdleTime, sizeof(FILETIME));
+	}
+	if (tif & CPU_TIF_INTERRUPT_TIME) {
+		memcpy(&times.interruptTime, &sppi.InterruptTime, sizeof(FILETIME));
+	}
+	if (tif & CPU_TIF_KERNEL_TIME) {
+		memcpy(&times.kernelTime, &sppi.KernelTime, sizeof(FILETIME));
+	}
+	if (tif & CPU_TIF_USER_TIME) {
+		memcpy(&times.userTime, &sppi.UserTime, sizeof(FILETIME));
+	}
+	if (tif & CPU_TIF_WORK_TIME) {
+		FILETIME totalTime = Profiler::AddTimes(times.userTime, times.kernelTime);
+		times.workTime = totalTime;
+	}
+	
 	return times;
 }
 
-std::vector<CpuCacheInfo> CpuProfiler::GetCpuAllLevelsCacheInfo() {
+std::vector<CpuCacheInfo> CpuProfiler::GetCpuAllLevelsCacheInfo(CPU_HIF_FLAGS hif) {
 	std::vector<CpuCacheInfo> infos;
+
+	if (hif == 0) {
+		return infos;
+	}
 
 	int cacheInfo[4] = { 0 };
 	int level = 0;
 
+
 	while (true) {
 		__cpuidex(cacheInfo, 0x04, level);
 
-		if (cacheInfo[0] == 0) break;
+		if (cacheInfo[0] == 0) {
+			break;
+		}
 
 		CpuCacheInfo info;
 
 		// EAX
-		info.type = cacheInfo[0] & 0x0f;
-		info.level = (cacheInfo[0] >> 5) & 0x07;
-		info.selfInitializing = (cacheInfo[0] >> 8) & 0x01;
-		info.associative = (cacheInfo[0] >> 9) & 0x01;
-		info.maxThreads = ((cacheInfo[0] >> 14) & 0xfff) + 1;
-		info.maxCores = ((cacheInfo[0] >> 26) & 0x3f) + 1;
+		if (hif & CPU_HIF_TYPE) {
+			info.type = cacheInfo[0] & 0x0f;
+		}
+		if (hif & CPU_HIF_LEVEL) {
+			info.level = (cacheInfo[0] >> 5) & 0x07;
+		}
+		if (hif & CPU_HIF_SELF_INITIALIZING) {
+			info.selfInitializing = (cacheInfo[0] >> 8) & 0x01;
+		}
+		if (hif & CPU_HIF_ASSOCIATIVE) {
+			info.associative = (cacheInfo[0] >> 9) & 0x01;
+		}
+		if (hif & CPU_HIF_MAX_THREADS) {
+			info.maxThreads = ((cacheInfo[0] >> 14) & 0xfff) + 1;
+		}
+		if (hif & CPU_HIF_MAX_CORES) {
+			info.maxCores = ((cacheInfo[0] >> 26) & 0x3f) + 1;
+		}
 
 		// EBX
-		info.lineSize = (cacheInfo[1] & 0xfff) + 1;
-		info.lineCount = ((cacheInfo[1] >> 12) & 0x3ff) + 1;
-		info.ways = ((cacheInfo[1] >> 22) & 0x3ff) + 1;
+		if (hif & CPU_HIF_LINE_SIZE) {
+			info.lineSize = (cacheInfo[1] & 0xfff) + 1;
+		}
+		if (hif & CPU_HIF_LINE_COUNT) {
+			info.lineCount = ((cacheInfo[1] >> 12) & 0x3ff) + 1;
+		}
+		if (hif & CPU_HIF_WAYS) {
+			info.ways = ((cacheInfo[1] >> 22) & 0x3ff) + 1;
+		}
 
 		// ECX
-		info.setCount = (cacheInfo[2] & 0xffffffff) + 1;
+		if (hif & CPU_HIF_SET_COUNT) {
+			info.setCount = (cacheInfo[2] & 0xffffffff) + 1;
+		}
 
 		// EDX
-		info.wbinvd = cacheInfo[3] & 0x01;
-		info.inclusive = (cacheInfo[3] >> 1) & 0x01;
-		info.complexIndexing = (cacheInfo[3] >> 2) & 0x01;
+		if (hif & CPU_HIF_WBINVD) {
+			info.wbinvd = cacheInfo[3] & 0x01;
+		}
+		if (hif & CPU_HIF_INCLUSIVE) {
+			info.inclusive = (cacheInfo[3] >> 1) & 0x01;
+		}
+		if (hif & CPU_HIF_COMPLEX_INDEXING) {
+			info.complexIndexing = (cacheInfo[3] >> 2) & 0x01;
+		}
 
 		// CUSTOM
-		info.size = info.lineSize * info.lineCount * info.ways * info.setCount;
+		if (hif & CPU_HIF_SIZE) {
+			info.size = info.lineSize * info.lineCount * info.ways * info.setCount;
+		}
 
 		infos.push_back(info);
 		level++;

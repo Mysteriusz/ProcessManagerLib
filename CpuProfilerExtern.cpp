@@ -91,24 +91,23 @@ extern "C" _declspec(dllexport) const BOOL* IsCpuHyperThreading() {
 
 }
 
-extern "C" _declspec(dllexport) const CpuTimesInfo* GetCpuTimesInfo() {
+extern "C" _declspec(dllexport) const CpuTimesInfo* GetCpuTimesInfo(CPU_TIF_FLAGS tif) {
 	CpuTimesInfo* res = new CpuTimesInfo();
-	*res = Profiler::cpuProfiler.GetCpuTimesInfo();
+	*res = Profiler::cpuProfiler.GetCpuTimesInfo(tif);
 	return res;
 }
-extern "C" _declspec(dllexport) const CpuModelInfo* GetCpuModelInfo() {
+extern "C" _declspec(dllexport) const CpuModelInfo* GetCpuModelInfo(CPU_MIF_FLAGS mif) {
 	CpuModelInfo* res = new CpuModelInfo();
-	*res = Profiler::cpuProfiler.GetCpuModelInfo();
+	*res = Profiler::cpuProfiler.GetCpuModelInfo(mif);
 	return res;
 }
-extern "C" _declspec(dllexport) const CpuSystemInfo* GetCpuSystemInfo() {
+extern "C" _declspec(dllexport) const CpuSystemInfo* GetCpuSystemInfo(CPU_SIF_FLAGS sif) {
 	CpuSystemInfo* res = new CpuSystemInfo();
-	*res = Profiler::cpuProfiler.GetCpuSystemInfo();
+	*res = Profiler::cpuProfiler.GetCpuSystemInfo(sif);
 	return res;
 }
-
-extern "C" _declspec(dllexport) const CpuCacheInfo* GetCpuAllLevelsCacheInfo(size_t* size) {
-	std::vector<CpuCacheInfo> res = Profiler::cpuProfiler.GetCpuAllLevelsCacheInfo();
+extern "C" _declspec(dllexport) const CpuCacheInfo* GetCpuAllLevelsCacheInfo(CPU_HIF_FLAGS hif, size_t* size) {
+	std::vector<CpuCacheInfo> res = Profiler::cpuProfiler.GetCpuAllLevelsCacheInfo(hif);
 	*size = res.size();
 
 	CpuCacheInfo* arr = new CpuCacheInfo[*size];

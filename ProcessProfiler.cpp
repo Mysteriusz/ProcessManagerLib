@@ -351,171 +351,140 @@ UINT ProcessProfiler::GetProcessStatus(UINT& pid) {
     return exitCode;
 }
 
-ProcessInfo ProcessProfiler::GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags, UINT& pid) {
+ProcessInfo ProcessProfiler::GetProcessInfo(
+    PROCESS_PIF_FLAGS pif,
+    PROCESS_MIF_FLAGS mif,
+    PROCESS_HIF_FLAGS hif,
+    PROCESS_RIF_FLAGS rif,
+    PROCESS_TIF_FLAGS tif,
+    PROCESS_EIF_FLAGS eif,
+    PROCESS_CIF_FLAGS cif,
+    PROCESS_OIF_FLAGS oif,
+    UINT& pid) {            
+
     ProcessInfo info;
-    
-    if (processInfoFlags == 0)
+
+    if (pif == 0)
         goto SKIPALL;
 
-    if (processInfoFlags & PIF_PROCESS_NAME) {
+    if (pif & PROCESS_PIF_NAME) {
         const std::string& name = GetProcessName(pid);
-
-        if (info.name != nullptr) {
-            delete[] info.name;
-        }
-
+        delete[] info.name;
         info.name = new char[name.length() + 1];
         strcpy_s(info.name, name.length() + 1, name.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_PARENT_NAME) {
+    if (pif & PROCESS_PIF_PARENT_NAME) {
         const std::string& pName = GetProcessParentName(pid);
-        
-        if (info.parentProcessName != nullptr) {
-            delete[] info.parentProcessName;
-        }
-
+        delete[] info.parentProcessName;
         info.parentProcessName = new char[pName.length() + 1];
         strcpy_s(info.parentProcessName, pName.length() + 1, pName.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_IMAGE_NAME) {
+    if (pif & PROCESS_PIF_IMAGE_NAME) {
         const std::string& imageName = GetProcessImageName(pid);
-
-        if (info.imageName != nullptr) {
-            delete[] info.imageName;
-        }
-
+        delete[] info.imageName;
         info.imageName = new char[imageName.length() + 1];
         strcpy_s(info.imageName, imageName.length() + 1, imageName.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_USER) {
+    if (pif & PROCESS_PIF_USER) {
         const std::string& user = GetProcessUser(pid);
-
-        if (info.user != nullptr) {
-            delete[] info.user;
-        }
-
+        delete[] info.user;
         info.user = new char[user.length() + 1];
         strcpy_s(info.user, user.length() + 1, user.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_PRIORITY) {
+    if (pif & PROCESS_PIF_PRIORITY) {
         const std::string& priority = GetProcessPriority(pid);
-        
-        if (info.priority != nullptr) {
-            delete[] info.priority;
-        }
-
+        delete[] info.priority;
         info.priority = new char[priority.length() + 1];
         strcpy_s(info.priority, priority.length() + 1, priority.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_FILE_VERSION) {
+    if (pif & PROCESS_PIF_FILE_VERSION) {
         const std::string& fileVersion = GetProcessFileVersion(pid);
-        
-        if (info.fileVersion != nullptr) {
-            delete[] info.fileVersion;
-        }
-
+        delete[] info.fileVersion;
         info.fileVersion = new char[fileVersion.length() + 1];
         strcpy_s(info.fileVersion, fileVersion.length() + 1, fileVersion.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_ARCHITECTURE_TYPE) {
+    if (pif & PROCESS_PIF_ARCHITECTURE_TYPE) {
         const std::string& architectureType = GetProcessArchitectureType(pid);
-        
-        if (info.architectureType != nullptr) {
-            delete[] info.architectureType;
-        }
-        
+        delete[] info.architectureType;
         info.architectureType = new char[architectureType.length() + 1];
         strcpy_s(info.architectureType, architectureType.length() + 1, architectureType.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_INTEGRITY_LEVEL) {
+    if (pif & PROCESS_PIF_INTEGRITY_LEVEL) {
         const std::string& integrityLevel = GetProcessIntegrityLevel(pid);
-        
-        if (info.integrityLevel != nullptr) {
-            delete[] info.integrityLevel;
-        }
-
+        delete[] info.integrityLevel;
         info.integrityLevel = new char[integrityLevel.length() + 1];
         strcpy_s(info.integrityLevel, integrityLevel.length() + 1, integrityLevel.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_COMMAND_LINE) {
+    if (pif & PROCESS_PIF_COMMAND_LINE) {
         const std::string& cmd = GetProcessCommandLine(pid);
-        
-        if (info.cmd != nullptr) {
-            delete[] info.cmd;
-        }
-
+        delete[] info.cmd;
         info.cmd = new char[cmd.length() + 1];
         strcpy_s(info.cmd, cmd.length() + 1, cmd.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_DESCRIPTION) {
+    if (pif & PROCESS_PIF_DESCRIPTION) {
         const std::string& description = GetProcessDescription(pid);
-       
-        if (info.description != nullptr) {
-            delete[] info.description;
-        }
-        
+        delete[] info.description;
         info.description = new char[description.length() + 1];
         strcpy_s(info.description, description.length() + 1, description.c_str());
     }
-    if (processInfoFlags & PIF_PROCESS_TIMES) {
-        info.timesInfo = GetProcessCurrentTimes(pid);
+    if (pif & PROCESS_PIF_TIMES) {
+        info.timesInfo = GetProcessCurrentTimes(tif, pid);
     }
-    if (processInfoFlags & PIF_PROCESS_PPID) {
+    if (pif & PROCESS_PIF_PPID) {
         info.ppid = GetProcessPPID(pid);
     }
-    if (processInfoFlags & PIF_PROCESS_PEB) {
+    if (pif & PROCESS_PIF_PEB) {
         info.peb = GetProcessPEB(pid);
     }
-    if (processInfoFlags & PIF_PROCESS_HANDLES_INFO) {
-        std::vector<ProcessHandleInfo> res = Profiler::processProfiler.GetProcessAllHandleInfo(handleInfoFlags, pid);
+    if (pif & PROCESS_PIF_HANDLES_INFO) {
+        std::vector<ProcessHandleInfo> res = Profiler::processProfiler.GetProcessAllHandleInfo(hif, pid);
         size_t size = res.size();
 
-        ProcessHandleInfo* arr = new ProcessHandleInfo[size];
-        std::copy(res.begin(), res.end(), arr);
+        delete[] info.handles;
+        info.handles = new ProcessHandleInfo[size];
+        std::copy(res.begin(), res.end(), info.handles);
 
         HANDLE* pHandle = Profiler::GetProcessHandle(pid);
-
-        info.handleCount = (UINT)size;
-        info.handles = arr;
+        info.handleCount = static_cast<UINT>(size);
         info.gdiCount = GetGuiResources(pHandle, GR_GDIOBJECTS);
         info.userCount = GetGuiResources(pHandle, GR_USEROBJECTS);
     }
-    if (processInfoFlags & PIF_PROCESS_CPU_INFO) {
-        info.cpuInfo = GetProcessCurrentCPUInfo(pid);
+    if (pif & PROCESS_PIF_CPU_INFO) {
+        info.cpuInfo = GetProcessCurrentCPUInfo(cif, pid);
     }
-    if (processInfoFlags & PIF_PROCESS_MEMORY_INFO) {
-        info.memoryInfo = GetProcessCurrentMemoryInfo(pid);
+    if (pif & PROCESS_PIF_MEMORY_INFO) {
+        info.memoryInfo = GetProcessCurrentMemoryInfo(eif, pid);
     }
-    if (processInfoFlags & PIF_PROCESS_IO_INFO) {
-        info.ioInfo = GetProcessCurrentIOInfo(pid);
+    if (pif & PROCESS_PIF_IO_INFO) {
+        info.ioInfo = GetProcessCurrentIOInfo(oif, pid);
     }
-    if (processInfoFlags & PIF_PROCESS_MODULES_INFO) {
-        std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(moduleInfoFlags, pid);
+    if (pif & PROCESS_PIF_MODULES_INFO) {
+        std::vector<ProcessModuleInfo> res = Profiler::processProfiler.GetProcessAllModuleInfo(mif, pid);
         size_t size = res.size();
 
-        ProcessModuleInfo* arr = new ProcessModuleInfo[size];
-        std::copy(res.begin(), res.end(), arr);
+        delete[] info.modules;
+        info.modules = new ProcessModuleInfo[size];
+        std::copy(res.begin(), res.end(), info.modules);
 
-        info.moduleCount = (UINT)size;
-        info.modules = arr;
+        info.moduleCount = static_cast<UINT>(size);
     }
-    if (processInfoFlags & PIF_PROCESS_THREADS_INFO) {
-        std::vector<ProcessThreadInfo> res = Profiler::processProfiler.GetProcessAllThreadInfo(threadInfoFlags, pid);
+    if (pif & PROCESS_PIF_THREADS_INFO) {
+        std::vector<ProcessThreadInfo> res = Profiler::processProfiler.GetProcessAllThreadInfo(rif, pid);
         size_t size = res.size();
 
-        ProcessThreadInfo* arr = new ProcessThreadInfo[size];
-        std::copy(res.begin(), res.end(), arr);
+        delete[] info.threads;
+        info.threads = new ProcessThreadInfo[size];
+        std::copy(res.begin(), res.end(), info.threads);
 
-        info.threadCount = (UINT)size;
-        info.threads = arr;
+        info.threadCount = static_cast<UINT>(size);
     }
 
-    SKIPALL:
+SKIPALL:
     info.pid = pid;
 
     return info;
 }
-ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
+ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(PROCESS_TIF_FLAGS tif, UINT& pid) {
     HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     FILETIME creationTime, exitTime, kernelTime, userTime;
     ProcessTimesInfo info = {};
@@ -525,32 +494,39 @@ ProcessTimesInfo ProcessProfiler::GetProcessCurrentTimes(UINT& pid) {
 
     FILETIME totalTime = Profiler::AddTimes(userTime, kernelTime);
 
-    info.creationTime = creationTime;
-    info.exitTime = exitTime;
-    info.kernelTime = kernelTime;
-    info.userTime = userTime;
-    info.totalTime = totalTime;
+    if (tif & PROCESS_TIF_CREATION_TIME)
+        info.creationTime = creationTime;
+    if (tif & PROCESS_TIF_EXIT_TIME)
+        info.exitTime = exitTime;
+    if (tif & PROCESS_TIF_KERNEL_TIME)
+        info.kernelTime = kernelTime;
+    if (tif & PROCESS_TIF_USER_TIME)
+        info.userTime = userTime;
+    if (tif & PROCESS_TIF_TOTAL_TIME)
+        info.totalTime = totalTime;
 
     return info;
 }
-ProcessMemoryInfo ProcessProfiler::GetProcessCurrentMemoryInfo(UINT& pid) {
+ProcessMemoryInfo ProcessProfiler::GetProcessCurrentMemoryInfo(PROCESS_EIF_FLAGS eif, UINT& pid) {
     HANDLE* pHandle = Profiler::GetProcessHandle(pid);
-
     ProcessMemoryInfo info = {};
-
     PROCESS_MEMORY_COUNTERS_EX pmc;
 
     if (GetProcessMemoryInfo(pHandle, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
-        info.pageFaults = (UINT)pmc.PageFaultCount;
-        
-        info.privateBytes = (UINT)pmc.PagefileUsage;
-        info.peakPrivateBytes = (UINT)pmc.PeakPagefileUsage;
-
-        info.workingBytes = (UINT)pmc.WorkingSetSize;
-        info.peakWorkingBytes = (UINT)pmc.PeakWorkingSetSize;
-        
-        info.virtualBytes = (UINT)pmc.PagefileUsage + (UINT)pmc.WorkingSetSize;
-        info.peakVirtualBytes = (UINT)pmc.PeakPagefileUsage + (UINT)pmc.PeakWorkingSetSize;
+        if (eif & PROCESS_EIF_PAGE_FAULTS)
+            info.pageFaults = (UINT)pmc.PageFaultCount;
+        if (eif & PROCESS_EIF_PRIVATE_BYTES)
+            info.privateBytes = (UINT)pmc.PagefileUsage;
+        if (eif & PROCESS_EIF_PEAK_PRIVATE_BYTES)
+            info.peakPrivateBytes = (UINT)pmc.PeakPagefileUsage;
+        if (eif & PROCESS_EIF_WORKING_BYTES)
+            info.workingBytes = (UINT)pmc.WorkingSetSize;
+        if (eif & PROCESS_EIF_PEAK_WORKING_BYTES)
+            info.peakWorkingBytes = (UINT)pmc.PeakWorkingSetSize;
+        if (eif & PROCESS_EIF_VIRTUAL_BYTES)
+            info.virtualBytes = (UINT)pmc.PagefileUsage + (UINT)pmc.WorkingSetSize;
+        if (eif & PROCESS_EIF_PEAK_VIRTUAL_BYTES)
+            info.peakVirtualBytes = (UINT)pmc.PeakPagefileUsage + (UINT)pmc.PeakWorkingSetSize;
     }
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
@@ -563,14 +539,13 @@ ProcessMemoryInfo ProcessProfiler::GetProcessCurrentMemoryInfo(UINT& pid) {
     ULONG len;
 
     NTSTATUS status = NtQueryInformationProcess(pHandle, 39, &ppi, sizeof(NTTYPES_PAGE_PRIORITY_INFORMATION), &len);
-    if (status != 0)
-        return info;
-
-    info.pagePriority = ppi.PagePriority;
+    if (status == 0 && (eif & PROCESS_EIF_PAGE_PRIORITY)) {
+        info.pagePriority = ppi.PagePriority;
+    }
 
     return info;
 }
-ProcessIOInfo ProcessProfiler::GetProcessCurrentIOInfo(UINT& pid) {
+ProcessIOInfo ProcessProfiler::GetProcessCurrentIOInfo(PROCESS_OIF_FLAGS oif, UINT& pid) {
     HANDLE* pHandle = Profiler::GetProcessHandle(pid);
     ProcessIOInfo info = {};
 
@@ -586,33 +561,39 @@ ProcessIOInfo ProcessProfiler::GetProcessCurrentIOInfo(UINT& pid) {
 
     NTSTATUS statusIph = NtQueryInformationProcess(pHandle, 33, &iph, sizeof(NTTYPES_IO_PRIORITY_HINT), &len);
     NTSTATUS statusIoc = NtQueryInformationProcess(pHandle, 2, &ioc, sizeof(IO_COUNTERS), &len);
-    
+
     if (statusIph != 0 || statusIoc != 0)
         return info;
 
-    info.reads = ioc.ReadOperationCount;
-    info.readBytes = ioc.ReadTransferCount;
-    
-    info.writes = ioc.WriteOperationCount;
-    info.writeBytes = ioc.WriteTransferCount;
-    
-    info.other = ioc.OtherOperationCount;
-    info.otherBytes = ioc.OtherTransferCount;
-
-    info.ioPriority = iph;
+    if (oif & PROCESS_OIF_READS)
+        info.reads = ioc.ReadOperationCount;
+    if (oif & PROCESS_OIF_READ_BYTES)
+        info.readBytes = ioc.ReadTransferCount;
+    if (oif & PROCESS_OIF_WRITES)
+        info.writes = ioc.WriteOperationCount;
+    if (oif & PROCESS_OIF_WRITE_BYTES)
+        info.writeBytes = ioc.WriteTransferCount;
+    if (oif & PROCESS_OIF_OTHER)
+        info.other = ioc.OtherOperationCount;
+    if (oif & PROCESS_OIF_OTHER_BYTES)
+        info.otherBytes = ioc.OtherTransferCount;
+    if (oif & PROCESS_OIF_IO_PRIORITY)
+        info.ioPriority = iph;
 
     return info;
 }
-ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
+ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(PROCESS_CIF_FLAGS cif, UINT& pid) {
     ProcessCPUInfo info;
 
     ProcessHolder* holder = Profiler::GetProcessHolder(pid);
-    ProcessTimesInfo times = GetProcessCurrentTimes(pid);
+
+    PROCESS_TIF_FLAGS flags = static_cast<PROCESS_TIF_FLAGS>(PROCESS_TIF_USER_TIME | PROCESS_TIF_KERNEL_TIME);
+    ProcessTimesInfo times = GetProcessCurrentTimes(flags, pid);
 
     LARGE_INTEGER now, sys, user, freq;
     QueryPerformanceCounter(&now);
     QueryPerformanceFrequency(&freq);
-    
+
     UINT cpuCount = GetActiveProcessorCount(ALL_PROCESSOR_GROUPS);
 
     memcpy(&user, &times.userTime, sizeof(FILETIME));
@@ -623,8 +604,10 @@ ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
 
     DOUBLE percent = cpuTimeDelta / totalTimeDelta * 100.0 / cpuCount;
 
-    info.usage = percent;
-    info.cycles = GetProcessCycleCount(pid);
+    if (cif & PROCESS_CIF_USAGE)
+        info.usage = percent;
+    if (cif & PROCESS_CIF_CYCLES)
+        info.cycles = GetProcessCycleCount(pid);
 
     holder->prevNow = now;
     holder->prevSys = sys;
@@ -633,7 +616,7 @@ ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(UINT& pid) {
     return info;
 }
 
-std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT64 moduleInfoFlags, UINT& pid) {
+std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(PROCESS_MIF_FLAGS mif, UINT& pid) {
     HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     std::vector<ProcessModuleInfo> infos;
@@ -650,22 +633,22 @@ std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT64 m
                 continue;
             }
 
-            if (MIF_MODULE_NAME) {
+            if (mif & PROCESS_MIF_NAME) {
                 info.name = _strdup(Profiler::WideStringToString(std::filesystem::path(modulePath).filename().c_str()).c_str());
             }
-            if (MIF_MODULE_ADDRESS) {
+            if (mif & PROCESS_MIF_ADDRESS) {
                 info.address = reinterpret_cast<UINT64>(modules[i]);
             }
-            if (MIF_MODULE_PATH) {
+            if (mif & PROCESS_MIF_PATH) {
                 info.path = _strdup(Profiler::WideStringToString(modulePath).c_str());
             }
-            if (MIF_MODULE_SIZE) {
+            if (mif & PROCESS_MIF_SIZE) {
                 MODULEINFO modInfo;
                 if (GetModuleInformation(pHandle, modules[i], &modInfo, sizeof(modInfo))) {
                     info.size = modInfo.SizeOfImage;
                 }
             }
-            if (MIF_MODULE_DESCRIPTION) {
+            if (mif & PROCESS_MIF_DESCRIPTION) {
                 info.description = _strdup(Profiler::GetFileDescription(modulePath).c_str());
             }
 
@@ -676,7 +659,7 @@ std::vector<ProcessModuleInfo> ProcessProfiler::GetProcessAllModuleInfo(UINT64 m
     CloseHandle(pHandle);
     return infos;
 }
-std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 handleInfoFlags, UINT& pid) {
+std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(PROCESS_HIF_FLAGS hif, UINT& pid) {
     std::vector<ProcessHandleInfo> infos;
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
@@ -715,7 +698,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
         HANDLE hHandle = phsi->Handles[i].HandleValue;
         _NtQueryObject NtQueryObject = (_NtQueryObject)GetProcAddress(ntdll, "NtQueryObject");
 
-        if (handleInfoFlags & HIF_HANDLE_NAME) {
+        if (hif & PROCESS_HIF_NAME) {
             ULONG oBufferSize = sizeof(OBJECT_NAME_INFORMATION);
             OBJECT_NAME_INFORMATION* oni = (OBJECT_NAME_INFORMATION*)malloc(oBufferSize);
 
@@ -742,7 +725,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
 
             free(oni);
         }
-        if (handleInfoFlags & HIF_HANDLE_TYPE) {
+        if (hif & PROCESS_HIF_TYPE) {
             ULONG oBufferSize = sizeof(OBJECT_TYPE_INFORMATION);
             OBJECT_TYPE_INFORMATION* oti = (OBJECT_TYPE_INFORMATION*)malloc(oBufferSize);
 
@@ -769,7 +752,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
 
             free(oti);
         }
-        if (handleInfoFlags & HIF_HANDLE_ADDRESS) {
+        if (hif & PROCESS_HIF_ADDRESS) {
             info.handle = reinterpret_cast<UINT64>(hHandle);
         }
         
@@ -780,7 +763,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(UINT64 h
     CloseHandle(pHandle);
     return infos;
 }
-std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 threadInfoFlags, UINT& pid) {
+std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(PROCESS_RIF_FLAGS rif, UINT& pid) {
     std::vector<ProcessThreadInfo> infos;
 
     HMODULE ntdll = GetModuleHandleA("ntdll.dll");
@@ -795,7 +778,7 @@ std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 t
     NTTYPES_SYSTEM_PROCESS_INFORMATION* spi = (NTTYPES_SYSTEM_PROCESS_INFORMATION*)malloc(bufferSize);
 
     status = NtQuerySystemInformation(SystemProcessInformation, spi, bufferSize, &bufferSize);
-    
+
     if (status != 0) {
         free(spi);
         return infos;
@@ -806,17 +789,17 @@ std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 t
         if (reinterpret_cast<UINT64>(current->UniqueProcessId) == pid) {
             for (ULONG i = 0; i < current->NumberOfThreads; ++i) {
                 ProcessThreadInfo info;
-                
-                if (threadInfoFlags & TIF_THREAD_TID) {
+
+                if (rif & PROCESS_RIF_TID) {
                     info.tid = reinterpret_cast<UINT64>(current->Threads[i].ClientId.UniqueThread);
                 }
-                if (threadInfoFlags & TIF_THREAD_START_ADDRESS) {
+                if (rif & PROCESS_RIF_START_ADDRESS) {
                     info.startAddress = reinterpret_cast<UINT64>(current->Threads[i].StartAddress);
                 }
-                if (threadInfoFlags & TIF_THREAD_PRIORITY) {
+                if (rif & PROCESS_RIF_PRIORITY) {
                     info.priority = current->Threads[i].Priority;
                 }
-                if (threadInfoFlags & TIF_THREAD_CYCLES) {
+                if (rif & PROCESS_RIF_CYCLES) {
                     UINT64 id = reinterpret_cast<UINT64>(current->Threads[i].ClientId.UniqueThread);
                     HANDLE threadHandle = OpenThread(THREAD_QUERY_INFORMATION, FALSE, (DWORD)id);
 
@@ -830,7 +813,7 @@ std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 t
 
                     info.cyclesDelta = cycles;
                 }
-                
+
                 infos.push_back(info);
             }
             break;
@@ -847,7 +830,15 @@ std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(UINT64 t
     return infos;
 }
 
-std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags) {
+std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(
+    PROCESS_PIF_FLAGS pif,
+    PROCESS_MIF_FLAGS mif,
+    PROCESS_HIF_FLAGS hif,
+    PROCESS_RIF_FLAGS rif,
+    PROCESS_TIF_FLAGS tif,
+    PROCESS_EIF_FLAGS eif,
+    PROCESS_CIF_FLAGS cif,
+    PROCESS_OIF_FLAGS oif) {
     std::vector<ProcessInfo> infos;
 
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -858,7 +849,7 @@ std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(UINT64 processInfoFl
         {
             while (Process32Next(snapshot, &pe32))
             {
-                ProcessInfo info = GetProcessInfo(processInfoFlags, moduleInfoFlags, handleInfoFlags, threadInfoFlags, (UINT&)pe32.th32ProcessID);
+                ProcessInfo info = GetProcessInfo(pif, mif, hif, rif, tif, eif, cif, oif, (UINT&)pe32.th32ProcessID);
                 infos.push_back(info);
             }
         }

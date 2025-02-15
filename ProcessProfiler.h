@@ -6,6 +6,7 @@
 
 // STRUCTS
 #include "ProcessInfo.h"
+#include "ProcessFlags.h"
 
 // LIBS
 #include "windows.h"
@@ -31,16 +32,34 @@ namespace ProfilingLib::Profilers {
 		UINT GetProcessPPID(UINT& pid);
 		UINT GetProcessStatus(UINT& pid);
 
-		ProcessTimesInfo GetProcessCurrentTimes(UINT& pid);
-		ProcessMemoryInfo GetProcessCurrentMemoryInfo(UINT& pid);
-		ProcessIOInfo GetProcessCurrentIOInfo(UINT& pid);
-		ProcessCPUInfo GetProcessCurrentCPUInfo(UINT& pid);
+		ProcessInfo GetProcessInfo(
+			PROCESS_PIF_FLAGS pif,
+			PROCESS_MIF_FLAGS mif,
+			PROCESS_HIF_FLAGS hif,
+			PROCESS_RIF_FLAGS rif,
+			PROCESS_TIF_FLAGS tif,
+			PROCESS_EIF_FLAGS eif,
+			PROCESS_CIF_FLAGS cif,
+			PROCESS_OIF_FLAGS oif,
+			UINT& pid
+		);
+		ProcessTimesInfo GetProcessCurrentTimes(PROCESS_TIF_FLAGS tif, UINT& pid);
+		ProcessMemoryInfo GetProcessCurrentMemoryInfo(PROCESS_EIF_FLAGS eif, UINT& pid);
+		ProcessIOInfo GetProcessCurrentIOInfo(PROCESS_OIF_FLAGS oif, UINT& pid);
+		ProcessCPUInfo GetProcessCurrentCPUInfo(PROCESS_CIF_FLAGS cif, UINT& pid);
 		
-		std::vector<ProcessModuleInfo> GetProcessAllModuleInfo(UINT64 moduleInfoFlags, UINT& pid);
-		std::vector<ProcessHandleInfo> GetProcessAllHandleInfo(UINT64 handleInfoFlags, UINT& pid);
-		std::vector<ProcessThreadInfo> GetProcessAllThreadInfo(UINT64 threadInfoFlags, UINT& pid);
-
-		ProcessInfo GetProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags, UINT& pid);
-		std::vector<ProcessInfo> GetAllProcessInfo(UINT64 processInfoFlags, UINT64 moduleInfoFlags, UINT64 handleInfoFlags, UINT64 threadInfoFlags);
+		std::vector<ProcessModuleInfo> GetProcessAllModuleInfo(PROCESS_MIF_FLAGS mif, UINT& pid);
+		std::vector<ProcessHandleInfo> GetProcessAllHandleInfo(PROCESS_HIF_FLAGS hif, UINT& pid);
+		std::vector<ProcessThreadInfo> GetProcessAllThreadInfo(PROCESS_RIF_FLAGS rif, UINT& pid);
+		std::vector<ProcessInfo> GetAllProcessInfo(
+			PROCESS_PIF_FLAGS pif,
+			PROCESS_MIF_FLAGS mif,
+			PROCESS_HIF_FLAGS hif,
+			PROCESS_RIF_FLAGS rif,
+			PROCESS_TIF_FLAGS tif,
+			PROCESS_EIF_FLAGS eif,
+			PROCESS_CIF_FLAGS cif,
+			PROCESS_OIF_FLAGS oif
+		);
 	};
 }

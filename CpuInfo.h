@@ -5,6 +5,15 @@
 #include "string.h"
 #include <vector>
 
+struct CpuModelInfo {
+	char* name = nullptr;
+	char* vendor = nullptr;
+	char* architecture = nullptr;
+	
+	UINT model = 0;
+	UINT family = 0;
+	UINT stepping = 0;
+};
 struct CpuTimesInfo {
 	FILETIME workTime = {0};
 	FILETIME kernelTime = {0};
@@ -13,59 +22,52 @@ struct CpuTimesInfo {
 	FILETIME interruptTime = {0};
 	FILETIME userTime = {0};
 };
-struct CpuModelInfo {
-	char* name;
-	char* vendor;
-	char* architecture;
-	
-	UINT model;
-	UINT family;
-	UINT stepping;
-};
 struct CpuCacheInfo {
 	// EAX
-	UINT maxCores;
-	UINT maxThreads;
-	BOOL associative;
-	BOOL selfInitializing;
-	UINT level;
-	UINT type;
+	UINT maxCores = 0;
+	UINT maxThreads = 0;
+	BOOL associative = 0;
+	BOOL selfInitializing = 0;
+	UINT level = 0;
+	UINT type = 0;
 	
 	// EBX
-	UINT ways;
-	UINT lineCount;
-	UINT lineSize;
+	UINT ways = 0;
+	UINT lineCount = 0;
+	UINT lineSize = 0;
 
 	// ECX
-	UINT setCount;
+	UINT setCount = 0;
 
 	// EDX
-	BOOL complexIndexing;
-	BOOL inclusive;
-	BOOL wbinvd;
+	BOOL complexIndexing = 0;
+	BOOL inclusive = 0;
+	BOOL wbinvd = 0;
 
 	// CUSTOM
-	UINT size;
+	UINT size = 0;
 };
 struct CpuSystemInfo {
-	UINT sockets;
-	UINT cores;
-	UINT threads;
-	UINT numaCount;
+	UINT sockets = 0;
+	UINT cores = 0;
+	UINT threads = 0;
+	UINT numaCount = 0;
 };
 struct CpuInfo {
-	DOUBLE usage;
-	DOUBLE baseFreq;
-	DOUBLE maxFreq;
+	DOUBLE usage = 0;
+	DOUBLE baseFreq = 0;
+	DOUBLE maxFreq = 0;
 
-	UINT threads;
-	UINT handles;
+	UINT threads = 0;
+	UINT handles = 0;
 	
-	BOOL virtualization;
-	BOOL hyperThreading;
-	
+	BOOL virtualization = 0;
+	BOOL hyperThreading = 0;
+
+	UINT cacheCount = 0;
+	CpuCacheInfo* cacheInfo = nullptr;
+
 	CpuSystemInfo sysInfo;
-	CpuCacheInfo cacheInfo;
 	CpuModelInfo modelInfo;
-	CpuTimesInfo times;
+	CpuTimesInfo timesInfo;
 };

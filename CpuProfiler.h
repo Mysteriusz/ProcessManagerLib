@@ -8,6 +8,7 @@
 #include "CpuInfo.h"
 
 // LIBS
+#include "CpuFlags.h"
 #include "windows.h"
 #include "string.h"
 #include <vector>
@@ -33,10 +34,11 @@ namespace ProfilingLib::Profilers {
 		BOOL IsCpuVirtualization();
 		BOOL IsCpuHyperThreading();
 
-		std::vector<CpuCacheInfo> GetCpuAllLevelsCacheInfo();
-
-		CpuSystemInfo GetCpuSystemInfo();
-		CpuModelInfo GetCpuModelInfo();
-		CpuTimesInfo GetCpuTimesInfo();
+		CpuInfo GetCpuInfo(CPU_CIF_FLAGS cif, CPU_SIF_FLAGS sif, CPU_MIF_FLAGS mif, CPU_TIF_FLAGS tif, CPU_HIF_FLAGS hif);
+		CpuSystemInfo GetCpuSystemInfo(CPU_SIF_FLAGS sif);
+		CpuModelInfo GetCpuModelInfo(CPU_MIF_FLAGS mif);
+		CpuTimesInfo GetCpuTimesInfo(CPU_TIF_FLAGS tif);
+		
+		std::vector<CpuCacheInfo> GetCpuAllLevelsCacheInfo(CPU_HIF_FLAGS hif);
 	};
 };
