@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="src\Profilers\CpuProfiler\CpuProfiler.cpp" />
     <ClCompile Include="src\Profilers\CpuProfiler\CpuProfilerExtern.cpp" />
+    <ClCompile Include="src\Profilers\GpuProfiler\GpuProfiler.cpp" />
+    <ClCompile Include="src\Profilers\GpuProfiler\GpuProfilerExtern.cpp" />
     <ClCompile Include="src\Profilers\ProcessProfiler\ProcessProfiler.cpp" />
     <ClCompile Include="src\Profilers\ProcessProfiler\ProcessProfilerExtern.cpp" />
     <ClCompile Include="src\Profilers\Profiler.cpp" />
@@ -29,6 +31,9 @@
   <ItemGroup>
     <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuFlags.h" />
     <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuInfo.h" />
+    <ClInclude Include="src\Profilers\GpuProfiler\GpuProfiler.h" />
+    <ClInclude Include="src\Profilers\GpuProfiler\Models\GpuFlags.h" />
+    <ClInclude Include="src\Profilers\GpuProfiler\Models\GpuInfo.h" />
     <ClInclude Include="src\Profilers\Windows\CpuNt.h" />
     <ClInclude Include="src\Profilers\CpuProfiler\CpuProfiler.h" />
     <ClInclude Include="src\Profilers\Windows\TypesNt.h" />
@@ -135,7 +140,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/wd 4005 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -3,6 +3,7 @@
 // PROFILERS
 #include "ProcessProfiler.h"
 #include "CpuProfiler.h"
+#include "GpuProfiler.h"
 #include "Profiler.h"
 
 // STRUCTS
@@ -14,6 +15,7 @@ using namespace ProfilingLib::Profilers;
 
 ProcessProfiler Profiler::processProfiler;
 CpuProfiler Profiler::cpuProfiler;
+GpuProfiler Profiler::gpuProfiler;
 
 std::unordered_map<DWORD, ProcessHolder> Profiler::processStates;
 

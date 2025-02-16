@@ -14,6 +14,7 @@
 namespace ProfilingLib::Profilers {
 	class ProcessProfiler;
 	class CpuProfiler;
+	class GpuProfiler;
 
 	class Profiler {
 	public:
@@ -36,5 +37,6 @@ namespace ProfilingLib::Profilers {
 		
 		static ProcessProfiler processProfiler;
 		static CpuProfiler cpuProfiler;
+		static GpuProfiler gpuProfiler;
 	};
 }

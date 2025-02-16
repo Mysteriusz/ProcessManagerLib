@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Profilers\CpuProfiler\Models">
       <UniqueIdentifier>{58ec765c-c18d-4dc1-8831-0d3179768e45}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Profilers\GpuProfiler">
+      <UniqueIdentifier>{82efdfe5-c3f9-4e7e-be7f-d40eb20508e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Profilers\GpuProfiler\Models">
+      <UniqueIdentifier>{6d571859-dd35-4f28-a78e-6c56779cb97a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Profilers\ProfilerExtern.cpp">
@@ -50,6 +56,12 @@
     </ClCompile>
     <ClCompile Include="src\Profilers\CpuProfiler\CpuProfilerExtern.cpp">
       <Filter>Source Files\Profilers\CpuProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Profilers\GpuProfiler\GpuProfiler.cpp">
+      <Filter>Source Files\Profilers\GpuProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Profilers\GpuProfiler\GpuProfilerExtern.cpp">
+      <Filter>Source Files\Profilers\GpuProfiler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,6 +97,15 @@
     </ClInclude>
     <ClInclude Include="src\Profilers\CpuProfiler\CpuProfiler.h">
       <Filter>Source Files\Profilers\CpuProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\GpuProfiler\GpuProfiler.h">
+      <Filter>Source Files\Profilers\GpuProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\GpuProfiler\Models\GpuFlags.h">
+      <Filter>Source Files\Profilers\GpuProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\GpuProfiler\Models\GpuInfo.h">
+      <Filter>Source Files\Profilers\GpuProfiler\Models</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
