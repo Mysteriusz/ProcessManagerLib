@@ -6,6 +6,7 @@
 // LIBS
 #include "psapi.h"
 #include "string.h"
+#include <memory>
 
 using namespace ProfilingLib::Profilers;
 
@@ -150,7 +151,8 @@ extern "C" __declspec(dllexport) const ProcessInfo* GetProcessInfo(PROCESS_PIF_F
 	PROCESS_TIF_FLAGS tif,
 	PROCESS_EIF_FLAGS eif,
 	PROCESS_CIF_FLAGS cif,
-	PROCESS_OIF_FLAGS oif, UINT pid) {
+	PROCESS_OIF_FLAGS oif,
+	UINT pid) {
 	ProcessInfo* res = new ProcessInfo();
 	*res = Profiler::processProfiler.GetProcessInfo(pif, mif, hif, rif, tif, eif, cif, oif, pid);
 
@@ -204,4 +206,35 @@ extern "C" __declspec(dllexport) void FreeProcessInfo(ProcessInfo* info) {
 	delete[] info->modules; info->modules = nullptr;
 
 	delete info;
+}
+extern "C" __declspec(dllexport) void FreeProcessInfoArray(ProcessInfo* info, size_t count) {
+	
+	for (size_t i = 0; i < count; ++i) {
+		delete[] info[i].name; info[i].name = nullptr;
+		delete[] info[i].parentProcessName; info[i].parentProcessName = nullptr;
+		delete[] info[i].user; info[i].user = nullptr;
+		delete[] info[i].imageName; info[i].imageName = nullptr;
+		delete[] info[i].priority; info[i].priority = nullptr;
+		delete[] info[i].fileVersion; info[i].fileVersion = nullptr;
+		delete[] info[i].integrityLevel; info[i].integrityLevel = nullptr;
+		delete[] info[i].architectureType; info[i].architectureType = nullptr;
+		delete[] info[i].cmd; info[i].cmd = nullptr;
+		delete[] info[i].description; info[i].description = nullptr;
+
+		for (UINT i = 0; i < info[i].moduleCount; ++i) {
+			delete[] info[i].modules[i].name; info[i].modules[i].name = nullptr;
+			delete[] info[i].modules[i].path; info[i].modules[i].path = nullptr;
+			delete[] info[i].modules[i].description; info[i].modules[i].description = nullptr;
+		}
+
+		for (UINT i = 0; i < info[i].handleCount; ++i) {
+			delete[] info[i].handles[i].name; info[i].handles[i].name = nullptr;
+			delete[] info[i].handles[i].type; info[i].handles[i].type = nullptr;
+		}
+
+		delete[] info[i].handles; info[i].handles = nullptr;
+		delete[] info[i].modules; info[i].modules = nullptr;
+	}
+
+	delete[] info;
 }

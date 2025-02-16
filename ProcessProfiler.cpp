@@ -39,10 +39,12 @@ std::string ProcessProfiler::GetProcessName(UINT& pid) {
             QueryFullProcessImageName(pHandle, PROCESS_NAME_NATIVE, processName, plen);
         }
         else {
+            delete plen;
             return "N/A";
         }
     }
 
+    delete plen;
     return std::filesystem::path(processName).filename().string();
 }
 std::string ProcessProfiler::GetProcessParentName(UINT& pid) {
@@ -60,10 +62,12 @@ std::string ProcessProfiler::GetProcessImageName(UINT& pid) {
             QueryFullProcessImageName(pHandle, PROCESS_NAME_NATIVE, processName, plen);
         }
         else {
+            delete plen;
             return "N/A";
         }
     }
 
+    delete plen;
     std::string str = Profiler::WideStringToString(processName);
 
     return str;
@@ -233,6 +237,8 @@ std::string ProcessProfiler::GetProcessIntegrityLevel(UINT& pid) {
 
     DWORD intLevel = *GetSidSubAuthority(tml->Label.Sid, (DWORD)(*GetSidSubAuthorityCount(tml->Label.Sid) - 1));
 
+    free(tml);
+    CloseHandle(hToken);
     switch (intLevel)
     {
         case SECURITY_MANDATORY_LOW_RID:
@@ -708,6 +714,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(PROCESS_
             
             if (temp == nullptr) {
                 free(oni);
+                free(phsi);
                 CloseHandle(pHandle);
                 return infos;
             }
@@ -716,8 +723,10 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(PROCESS_
             oStatus = NtQueryObject(hHandle, (OBJECT_INFORMATION_CLASS)1, oni, oBufferSize, &oBufferSize);
             
             UNICODE_STRING name = oni->Name;
-            if (!name.Buffer || oStatus == 0xC0000008)
+            if (!name.Buffer || oStatus == 0xC0000008) {
+                free(oni);
                 continue;
+            }
             
             const std::string str = Profiler::WideStringToString(name.Buffer);
 
@@ -735,6 +744,7 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(PROCESS_
 
             if (temp == nullptr) {
                 free(oti);
+                free(phsi);
                 CloseHandle(pHandle);
                 return infos;
             }
@@ -743,8 +753,10 @@ std::vector<ProcessHandleInfo> ProcessProfiler::GetProcessAllHandleInfo(PROCESS_
             oStatus = NtQueryObject(hHandle, ObjectTypeInformation, oti, oBufferSize, &oBufferSize);
             
             UNICODE_STRING typeName = oti->TypeName;
-            if (!typeName.Buffer || oStatus == 0xC0000008)
+            if (!typeName.Buffer || oStatus == 0xC0000008) {
+                free(oti);
                 continue;
+            }
 
             const std::string str = Profiler::WideStringToString(typeName.Buffer);
 
