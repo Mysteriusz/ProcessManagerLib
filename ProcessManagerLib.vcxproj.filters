@@ -33,58 +33,58 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ProcessProfiler.cpp">
-      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
-    </ClCompile>
-    <ClCompile Include="ProcessProfilerExtern.cpp">
-      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
-    </ClCompile>
-    <ClCompile Include="Profiler.cpp">
+    <ClCompile Include="src\Profilers\ProfilerExtern.cpp">
       <Filter>Source Files\Profilers</Filter>
     </ClCompile>
-    <ClCompile Include="ProfilerExtern.cpp">
+    <ClCompile Include="src\Profilers\Profiler.cpp">
       <Filter>Source Files\Profilers</Filter>
     </ClCompile>
-    <ClCompile Include="CpuProfiler.cpp">
+    <ClCompile Include="src\Profilers\ProcessProfiler\ProcessProfiler.cpp">
+      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Profilers\ProcessProfiler\ProcessProfilerExtern.cpp">
+      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Profilers\CpuProfiler\CpuProfiler.cpp">
       <Filter>Source Files\Profilers\CpuProfiler</Filter>
     </ClCompile>
-    <ClCompile Include="CpuProfilerExtern.cpp">
+    <ClCompile Include="src\Profilers\CpuProfiler\CpuProfilerExtern.cpp">
       <Filter>Source Files\Profilers\CpuProfiler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ProcessProfiler.h">
-      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
+    <ClInclude Include="src\Profilers\Windows\CpuNt.h">
+      <Filter>Source Files\Profilers\Windows</Filter>
     </ClInclude>
-    <ClInclude Include="Profiler.h">
+    <ClInclude Include="src\Profilers\Windows\ProcessNt.h">
+      <Filter>Source Files\Profilers\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\Windows\TypesNt.h">
+      <Filter>Source Files\Profilers\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\Profiler.h">
       <Filter>Source Files\Profilers</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessInfo.h">
-      <Filter>Source Files\Profilers\ProcessProfiler\Models</Filter>
-    </ClInclude>
-    <ClInclude Include="ProcessNt.h">
-      <Filter>Source Files\Profilers\Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="CpuProfiler.h">
-      <Filter>Source Files\Profilers\CpuProfiler</Filter>
-    </ClInclude>
-    <ClInclude Include="CpuInfo.h">
+    <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuFlags.h">
       <Filter>Source Files\Profilers\CpuProfiler\Models</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessFlags.h">
-      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
+    <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuInfo.h">
+      <Filter>Source Files\Profilers\CpuProfiler\Models</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessHolder.h">
+    <ClInclude Include="src\Profilers\ProcessProfiler\Models\ProcessFlags.h">
       <Filter>Source Files\Profilers\ProcessProfiler\Models</Filter>
     </ClInclude>
-    <ClInclude Include="CpuFlags.h">
+    <ClInclude Include="src\Profilers\ProcessProfiler\Models\ProcessInfo.h">
+      <Filter>Source Files\Profilers\ProcessProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\ProcessProfiler\ProcessProfiler.h">
+      <Filter>Source Files\Profilers\ProcessProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\ProcessProfiler\Models\ProcessHolder.h">
+      <Filter>Source Files\Profilers\ProcessProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\CpuProfiler\CpuProfiler.h">
       <Filter>Source Files\Profilers\CpuProfiler</Filter>
-    </ClInclude>
-    <ClInclude Include="CpuNt.h">
-      <Filter>Source Files\Profilers\Windows</Filter>
-    </ClInclude>
-    <ClInclude Include="TypesNt.h">
-      <Filter>Source Files\Profilers\Windows</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

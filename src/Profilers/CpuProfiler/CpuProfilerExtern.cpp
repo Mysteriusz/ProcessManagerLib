@@ -1,11 +1,14 @@
 // PROFILERS
 #include "ProcessProfiler.h"
 #include "CpuProfiler.h"
+#include "CpuFlags.h"
+#include "Profiler.h"
 
 // STRUCTS
 #include "CpuInfo.h"
 
 // LIBS
+#include <string>
 
 using namespace ProfilingLib::Profilers;
 

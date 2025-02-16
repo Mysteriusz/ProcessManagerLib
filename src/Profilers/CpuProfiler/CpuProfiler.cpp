@@ -76,21 +76,21 @@ std::string CpuProfiler::GetCpuArchitecture() {
 
 UINT CpuProfiler::GetCpuModel() {
 	int cpuInfo[4] = { 0 };
-	__cpuidex(cpuInfo, 1, 0);
+	__cpuidex(cpuInfo, 0x01, 0);
 
-	return (cpuInfo[0] >> 8) && 0x0f;
+	return (cpuInfo[0] >> 4) & 0x0f;
 }
 UINT CpuProfiler::GetCpuFamily() {
 	int cpuInfo[4] = { 0 };
-	__cpuidex(cpuInfo, 1, 0);
+	__cpuidex(cpuInfo, 0x01, 0);
 
-	return (cpuInfo[0] >> 4) && 0x0f;
+	return (cpuInfo[0] >> 8) & 0x0f;
 }
 UINT CpuProfiler::GetCpuStepping() {
 	int cpuInfo[4] = { 0 };
-	__cpuidex(cpuInfo, 1, 0);
+	__cpuidex(cpuInfo, 0x01, 0);
 
-	return cpuInfo[0] && 0x0f;
+	return cpuInfo[0] & 0x0f;
 }
 
 UINT CpuProfiler::GetCpuThreadCount() {
@@ -328,13 +328,13 @@ CpuModelInfo CpuProfiler::GetCpuModelInfo(CPU_MIF_FLAGS mif) {
 		info.name = _strdup(Profiler::cpuProfiler.GetCpuName().c_str());
 	}
 	if (mif & CPU_MIF_MODEL) {
-		info.model = (cpuInfo[0] >> 4) && 0x0f;
+		info.model = (cpuInfo[0] >> 4) & 0x0f;
 	}
 	if (mif & CPU_MIF_STEPPING) {
-		info.stepping = cpuInfo[0] && 0x0f;
+		info.stepping = cpuInfo[0] & 0x0f;
 	}
 	if (mif & CPU_MIF_FAMILY) {
-		info.family = (cpuInfo[0] >> 8) && 0x0f;
+		info.family = (cpuInfo[0] >> 8) & 0x0f;
 	}
 	if (mif & CPU_MIF_VENDOR) {
 		info.vendor = _strdup(Profiler::cpuProfiler.GetCpuVendor().c_str());

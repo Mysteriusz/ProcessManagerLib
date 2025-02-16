@@ -545,8 +545,9 @@ ProcessMemoryInfo ProcessProfiler::GetProcessCurrentMemoryInfo(PROCESS_EIF_FLAGS
     ULONG len;
 
     NTSTATUS status = NtQueryInformationProcess(pHandle, 39, &ppi, sizeof(NTTYPES_PAGE_PRIORITY_INFORMATION), &len);
-    if (status == 0 && (eif & PROCESS_EIF_PAGE_PRIORITY)) {
-        info.pagePriority = ppi.PagePriority;
+    if (status == 0) {
+        if ((eif & PROCESS_EIF_PAGE_PRIORITY))
+            info.pagePriority = ppi.PagePriority;
     }
 
     return info;
@@ -841,7 +842,6 @@ std::vector<ProcessThreadInfo> ProcessProfiler::GetProcessAllThreadInfo(PROCESS_
     free(spi);
     return infos;
 }
-
 std::vector<ProcessInfo> ProcessProfiler::GetAllProcessInfo(
     PROCESS_PIF_FLAGS pif,
     PROCESS_MIF_FLAGS mif,

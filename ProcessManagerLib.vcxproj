@@ -19,25 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CpuProfiler.cpp" />
-    <ClCompile Include="CpuProfilerExtern.cpp" />
-    <ClCompile Include="ProcessProfiler.cpp" />
-    <ClCompile Include="ProcessProfilerExtern.cpp" />
-    <ClCompile Include="Profiler.cpp" />
-    <ClCompile Include="ProfilerExtern.cpp" />
+    <ClCompile Include="src\Profilers\CpuProfiler\CpuProfiler.cpp" />
+    <ClCompile Include="src\Profilers\CpuProfiler\CpuProfilerExtern.cpp" />
+    <ClCompile Include="src\Profilers\ProcessProfiler\ProcessProfiler.cpp" />
+    <ClCompile Include="src\Profilers\ProcessProfiler\ProcessProfilerExtern.cpp" />
+    <ClCompile Include="src\Profilers\Profiler.cpp" />
+    <ClCompile Include="src\Profilers\ProfilerExtern.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CpuFlags.h" />
-    <ClInclude Include="CpuInfo.h" />
-    <ClInclude Include="CpuNt.h" />
-    <ClInclude Include="CpuProfiler.h" />
-    <ClInclude Include="TypesNt.h" />
-    <ClInclude Include="ProcessNt.h" />
-    <ClInclude Include="ProcessFlags.h" />
-    <ClInclude Include="ProcessHolder.h" />
-    <ClInclude Include="ProcessInfo.h" />
-    <ClInclude Include="ProcessProfiler.h" />
-    <ClInclude Include="Profiler.h" />
+    <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuFlags.h" />
+    <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuInfo.h" />
+    <ClInclude Include="src\Profilers\Windows\CpuNt.h" />
+    <ClInclude Include="src\Profilers\CpuProfiler\CpuProfiler.h" />
+    <ClInclude Include="src\Profilers\Windows\TypesNt.h" />
+    <ClInclude Include="src\Profilers\Windows\ProcessNt.h" />
+    <ClInclude Include="src\Profilers\ProcessProfiler\Models\ProcessFlags.h" />
+    <ClInclude Include="src\Profilers\ProcessProfiler\Models\ProcessHolder.h" />
+    <ClInclude Include="src\Profilers\ProcessProfiler\Models\ProcessInfo.h" />
+    <ClInclude Include="src\Profilers\ProcessProfiler\ProcessProfiler.h" />
+    <ClInclude Include="src\Profilers\Profiler.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -135,6 +135,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/wd 4005 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
