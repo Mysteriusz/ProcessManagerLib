@@ -30,6 +30,12 @@ extern "C" _declspec(dllexport) const char* GetGpuDriverName() {
 
 	return staticRes.c_str();
 }
+extern "C" _declspec(dllexport) const char* GetGpuDXVersion() {
+	std::string res = Profiler::gpuProfiler.GetGpuDXVersion();
+	static std::string staticRes; staticRes = res;
+
+	return staticRes.c_str();
+}
 
 extern "C" _declspec(dllexport) const UINT64* GetGpuDriverVersion() {
 	UINT64 res = Profiler::gpuProfiler.GetGpuDriverVersion();
@@ -37,9 +43,16 @@ extern "C" _declspec(dllexport) const UINT64* GetGpuDriverVersion() {
 
 	return &staticRes;
 }
-extern "C" _declspec(dllexport) const UINT64* GetGpuVRamSize() {
-	UINT64 res = Profiler::gpuProfiler.GetGpuVRamSize();
-	static UINT64 staticRes; staticRes = res;
+
+extern "C" _declspec(dllexport) const DOUBLE* GetGpuVRamSize() {
+	DOUBLE res = Profiler::gpuProfiler.GetGpuVRamSize();
+	static DOUBLE staticRes; staticRes = res;
+
+	return &staticRes;
+}
+extern "C" _declspec(dllexport) const DOUBLE* GetGpuVRamUsage() {
+	DOUBLE res = Profiler::gpuProfiler.GetGpuVRamUsage();
+	static DOUBLE staticRes; staticRes = res;
 
 	return &staticRes;
 }

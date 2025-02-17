@@ -12,13 +12,17 @@
 #include "TypesNt.h"
 #include "windows.h"
 #include "string.h"
-#include "d3d11.h"
+#include "d3d12.h"
 #include "d3d9.h"
-#include "dxgi1_4.h"
+#include "dxgi1_6.h"
+
+#include <nvml.h>
 
 #include <iostream>
 
+#pragma comment(lib, "nvml.lib")
 #pragma comment(lib, "d3d9.lib")
+#pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
 using namespace ProfilingLib::Profilers;
@@ -81,6 +85,67 @@ std::string GpuProfiler::GetGpuDriverName() {
 
 	return dx3dIden.Driver;
 }
+std::string GpuProfiler::GetGpuDXVersion() {
+	IDXGIFactory6* dxgi = nullptr;
+
+	HRESULT res = CreateDXGIFactory1(IID_PPV_ARGS(&dxgi));
+
+	if (FAILED(res)) {
+		return "N/A";
+	}
+
+	IDXGIAdapter1* adapter = nullptr;
+
+	std::string ver;
+
+	dxgi->EnumAdapters1(0, &adapter);
+
+	DXGI_ADAPTER_DESC1 desc;
+	adapter->GetDesc1(&desc);
+
+	ID3D12Device* pDevice = nullptr;
+	if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_2, IID_PPV_ARGS(&pDevice)))) {
+		ver = "12.2";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&pDevice)))) {
+		ver = "12.1";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&pDevice)))) {
+		ver = "12.0";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_1, IID_PPV_ARGS(&pDevice)))) {
+		ver = "11.1";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&pDevice)))) {
+		ver = "11.0";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_10_1, IID_PPV_ARGS(&pDevice)))) {
+		ver = "10.1";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_10_0, IID_PPV_ARGS(&pDevice)))) {
+		ver = "10.0";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_9_3, IID_PPV_ARGS(&pDevice)))) {
+		ver = "9.3";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_9_2, IID_PPV_ARGS(&pDevice)))) {
+		ver = "9.2";
+	}
+	else if (SUCCEEDED(D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_9_1, IID_PPV_ARGS(&pDevice)))) {
+		ver = "9.1";
+	}
+	else {
+		ver = "UNKNOWN";
+	}
+
+	if (pDevice) {
+		pDevice->Release();
+		adapter->Release();
+	}
+
+	dxgi->Release();
+	return ver;
+}
 
 UINT64 GpuProfiler::GetGpuDriverVersion() {
 	IDirect3D9Ex* dx3d = nullptr;
@@ -97,56 +162,46 @@ UINT64 GpuProfiler::GetGpuDriverVersion() {
 
 	return dx3dIden.DriverVersion.QuadPart;
 }
-UINT64 GpuProfiler::GetGpuVRamSize() {
-	IDXGIAdapter3* dxgi = nullptr;
-	IDXGIFactory4* dxgiFac = nullptr;
-	
-	HRESULT res = CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)&dxgiFac);
 
-	if (FAILED(res)) {
-		return 0;
-	}
+DOUBLE GpuProfiler::GetGpuVRamSize() {
+	nvmlInit();
 
-	res = dxgiFac->EnumAdapters(0, (IDXGIAdapter**)&dxgi);
+	nvmlDevice_t device;
+	nvmlMemory_t memoryInfo;
 
-	if (FAILED(res)) {
-		return 0;
-	}
+	DOUBLE usage = 0.0;
 
-	DXGI_QUERY_VIDEO_MEMORY_INFO memInfo;
-	res = dxgi->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memInfo);
+	nvmlDeviceGetHandleByIndex(0, &device);
+	nvmlDeviceGetMemoryInfo(device, &memoryInfo);
 
-	if (FAILED(res)) {
-		return 0;
-	}
+	usage += memoryInfo.total;
 
-	return memInfo.Budget;
+	nvmlShutdown();
+
+	return usage / (1024 * 1024 * 1024);
 }
-UINT64 GpuProfiler::GetGpuVRamUsage() {
-	IDXGIAdapter3* dxgi = nullptr;
-	IDXGIFactory4* dxgiFac = nullptr;
+DOUBLE GpuProfiler::GetGpuVRamUsage() {
+	nvmlInit();
 
-	HRESULT res = CreateDXGIFactory1(__uuidof(IDXGIFactory4), (void**)&dxgiFac);
+	UINT deviceCount;
+	nvmlDevice_t device;
+	nvmlMemory_t memoryInfo;
 
-	if (FAILED(res)) {
-		return 0;
+	nvmlDeviceGetCount(&deviceCount);
+
+	DOUBLE usage = 0.0;
+
+	for (UINT i = 0; i < deviceCount; ++i) {
+		nvmlDeviceGetHandleByIndex(i, &device);
+		nvmlDeviceGetMemoryInfo(device, &memoryInfo);
+
+		usage += memoryInfo.used;
 	}
 
-	res = dxgiFac->EnumAdapters(0, (IDXGIAdapter**)&dxgi);
+	nvmlShutdown();
 
-	if (FAILED(res)) {
-		return 0;
-	}
-
-	DXGI_QUERY_VIDEO_MEMORY_INFO memInfo;
-	res = dxgi->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &memInfo);
-
-	if (FAILED(res)) {
-		return 0;
-	}
-
-	return memInfo.CurrentUsage;
-}
+	return usage / (1024 * 1024 * 1024);
+}	 
 
 UINT GpuProfiler::GetGpuID() {
 	IDirect3D9Ex* dx3d = nullptr;
@@ -177,4 +232,108 @@ UINT GpuProfiler::GetGpuRevision() {
 	res = dx3d->GetAdapterIdentifier(0, 0, &dx3dIden);
 
 	return dx3dIden.Revision;
+}
+
+GpuPhysicalInfo GpuProfiler::GetGpuPhysicalInfo() {
+	GpuPhysicalInfo info;
+	
+	nvmlDevice_t device;
+	nvmlDeviceGetHandleByIndex(0, &device);
+	
+	nvmlPciInfo_t pciInfo;
+
+	nvmlDeviceGetPciInfo(device, &pciInfo);
+
+	info.bus = pciInfo.bus;
+
+	info.busId = pciInfo.busId;
+	info.legacyBusId = pciInfo.busIdLegacy;
+	
+	info.deviceId = pciInfo.device;
+	info.pciDeviceId = pciInfo.pciDeviceId;
+	info.subSysDeviceId = pciInfo.pciSubSystemId;
+
+	info.domain = pciInfo.domain;
+
+	return info;
+}
+GpuModelInfo GpuProfiler::GetGpuModelInfo() {
+	GpuModelInfo info;
+
+	info.name = _strdup(GetGpuName().c_str());
+	info.driverName = _strdup(GetGpuDriverName().c_str());
+	info.vendor = _strdup(GetGpuVendor().c_str());
+
+	info.driverVersion = GetGpuDriverVersion();
+	info.id = GetGpuID();
+	info.revision = GetGpuRevision();
+
+	return info;
+}
+GpuUtilizationInfo GpuProfiler::GetGpuUtilizationInfo()	 {
+	GpuUtilizationInfo info;
+
+	nvmlDevice_t device;
+	nvmlUtilization_t utilization;
+
+	UINT copyUtil;
+	UINT encUtil;
+	UINT decUtil;
+	UINT encInstCount;
+	UINT decInstCount;
+
+	nvmlInit();
+
+	nvmlDeviceGetHandleByIndex(0, &device);
+	
+	nvmlDeviceGetUtilizationRates(device, &utilization);
+	nvmlDeviceGetEncoderUtilization(device, &encUtil, &encInstCount);
+	nvmlDeviceGetDecoderUtilization(device, &decUtil, &decInstCount);
+
+	nvmlMemory_t memInfo;
+	nvmlDeviceGetMemoryInfo(device, &memInfo);
+	copyUtil = static_cast<UINT>((memInfo.used * 100) / memInfo.total);
+
+	info.utilization = utilization.gpu;
+	info.videoEncode = encUtil;
+	info.videoDecode = decUtil;
+	info.copy = copyUtil;
+
+	return info;
+}
+GpuResolutionInfo GpuProfiler::GetGpuMaxResolutionInfo() {
+	DEVMODE dev = {};
+
+	UINT num = 0;
+
+	GpuResolutionInfo info = {0};
+
+	while (EnumDisplaySettings(nullptr, num, &dev)) {
+		if (dev.dmPelsWidth > info.width || dev.dmPelsHeight > info.height) {
+			info.width = dev.dmPelsWidth;
+			info.height = dev.dmPelsHeight;
+		}
+		num++;
+	}
+
+	return info;
+}
+GpuResolutionInfo GpuProfiler::GetGpuMinResolutionInfo() {
+	DEVMODE dev = {};
+
+	UINT num = 0;
+
+	GpuResolutionInfo info;
+	info.width = UINT_MAX;
+	info.height = UINT_MAX;
+
+	while (EnumDisplaySettings(nullptr, num, &dev)) {
+		if (dev.dmPelsWidth < info.width || dev.dmPelsHeight < info.height) {
+			info.width = dev.dmPelsWidth;
+			info.height = dev.dmPelsHeight;
+		}
+		num++;
+	}
+
+	return info;
 }

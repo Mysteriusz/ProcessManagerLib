@@ -140,12 +140,13 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/wd 4005 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\include;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -2,6 +2,10 @@
 
 #include <windows.h>
 
+struct GpuResolutionInfo {
+	UINT width;
+	UINT height;
+};
 struct GpuModelInfo {
 	char* name = nullptr;
 	char* vendor = nullptr;
@@ -12,14 +16,30 @@ struct GpuModelInfo {
 	UINT id = 0;
 	UINT revision = 0;
 };
+struct GpuUtilizationInfo{
+	DOUBLE utilization = 0.0;
+	DOUBLE videoEncode = 0.0;
+	DOUBLE videoDecode = 0.0;
+	DOUBLE copy = 0.0;
+};
+struct GpuPhysicalInfo {
+	char* busId;
+	char* legacyBusId;
+	
+	UINT bus = 0;
+	UINT domain = 0;
+	UINT deviceId = 0;
+	UINT pciDeviceId = 0;
+	UINT subSysDeviceId = 0;
+};
 struct GpuInfo {
-	UINT64 vRamUsage = 0;
-	UINT64 vRamSize = 0;
+	char* dxSupport = 0;
 
-	UINT shaderModel = 0;
-	UINT dxSupport = 0;
-	UINT maxResolutionWidth = 0;
-	UINT maxResolutionHeight = 0;
+	DOUBLE vRamUsage = 0;
+	DOUBLE vRamSize = 0;
 
+	GpuUtilizationInfo utilInfo;
+	GpuResolutionInfo maxResInfo;
+	GpuResolutionInfo minResInfo;
 	GpuModelInfo modelInfo;
 };

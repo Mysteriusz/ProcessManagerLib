@@ -5,10 +5,10 @@
 #include "Profiler.h"
 
 // STRUCTS
-#include "CpuInfo.h"
+#include "GpuInfo.h"
 
 // LIBS
-#include "CpuFlags.h"
+#include "GpuFlags.h"
 #include "windows.h"
 #include "string.h"
 #include <vector>
@@ -19,12 +19,20 @@ namespace ProfilingLib::Profilers {
 		std::string GetGpuName();
 		std::string GetGpuVendor();
 		std::string GetGpuDriverName();
+		std::string GetGpuDXVersion();
 
 		UINT64 GetGpuDriverVersion();
-		UINT64 GetGpuVRamSize();
-		UINT64 GetGpuVRamUsage();
+
+		DOUBLE GetGpuVRamSize();
+		DOUBLE GetGpuVRamUsage();
 
 		UINT GetGpuID();
 		UINT GetGpuRevision();
+		
+		GpuPhysicalInfo GetGpuPhysicalInfo();
+		GpuModelInfo GetGpuModelInfo();
+		GpuUtilizationInfo GetGpuUtilizationInfo();
+		GpuResolutionInfo GetGpuMaxResolutionInfo();
+		GpuResolutionInfo GetGpuMinResolutionInfo();
 	};
 }
