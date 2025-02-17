@@ -3,8 +3,8 @@
 #include <windows.h>
 
 struct GpuResolutionInfo {
-	UINT width;
-	UINT height;
+	UINT width = 0;
+	UINT height = 0;
 };
 struct GpuModelInfo {
 	char* name = nullptr;
@@ -23,8 +23,8 @@ struct GpuUtilizationInfo{
 	DOUBLE copy = 0.0;
 };
 struct GpuPhysicalInfo {
-	char* busId;
-	char* legacyBusId;
+	char* busId = nullptr;
+	char* legacyBusId = nullptr;
 	
 	UINT bus = 0;
 	UINT domain = 0;

@@ -234,43 +234,106 @@ UINT GpuProfiler::GetGpuRevision() {
 	return dx3dIden.Revision;
 }
 
-GpuPhysicalInfo GpuProfiler::GetGpuPhysicalInfo() {
-	GpuPhysicalInfo info;
+GpuInfo GpuProfiler::GetGpuInfo(GPU_GIF_FLAGS gif, GPU_MIF_FLAGS mif, GPU_UIF_FLAGS uif, GPU_PIF_FLAGS pif, GPU_RIF_FLAGS rif){
+	GpuInfo info;
 	
+	if (gif & GPU_GIF_DX_SUPPORT) {
+		info.dxSupport = _strdup(GetGpuDXVersion().c_str());
+	}
+	if (gif & GPU_GIF_MIN_RES) {
+		info.maxResInfo = GetGpuMaxResolutionInfo(rif);
+	}
+	if (gif & GPU_GIF_MAX_RES) {
+		info.maxResInfo = GetGpuMinResolutionInfo(rif);
+	}
+	if (gif & GPU_GIF_MODEL_INFO) {
+		info.modelInfo = GetGpuModelInfo(mif);
+	}
+	if (gif & GPU_GIF_UTILIZATION) {
+		info.utilInfo = GetGpuUtilizationInfo(uif);
+	}
+
+	if (gif & GPU_GIF_VRAM_USAGE) {
+		info.vRamUsage = GetGpuVRamUsage();
+	}
+
+	if (gif & GPU_GIF_VRAM_SIZE) {
+		info.vRamSize = GetGpuVRamSize();
+	}
+
+	return info;
+}
+GpuPhysicalInfo GpuProfiler::GetGpuPhysicalInfo(GPU_PIF_FLAGS pif) {
+	GpuPhysicalInfo info;
+
 	nvmlDevice_t device;
 	nvmlDeviceGetHandleByIndex(0, &device);
-	
-	nvmlPciInfo_t pciInfo;
 
+	nvmlPciInfo_t pciInfo;
 	nvmlDeviceGetPciInfo(device, &pciInfo);
 
-	info.bus = pciInfo.bus;
+	// Check the flags and assign only the requested info
+	if (pif & GPU_PIF_BUS) {
+		info.bus = pciInfo.bus;
+	}
 
-	info.busId = pciInfo.busId;
-	info.legacyBusId = pciInfo.busIdLegacy;
-	
-	info.deviceId = pciInfo.device;
-	info.pciDeviceId = pciInfo.pciDeviceId;
-	info.subSysDeviceId = pciInfo.pciSubSystemId;
+	if (pif & GPU_PIF_BUS_ID) {
+		info.busId = pciInfo.busId;
+	}
 
-	info.domain = pciInfo.domain;
+	if (pif & GPU_PIF_LEGACY_BUS_ID) {
+		info.legacyBusId = pciInfo.busIdLegacy;
+	}
+
+	if (pif & GPU_PIF_DEVICE_ID) {
+		info.deviceId = pciInfo.device;
+	}
+
+	if (pif & GPU_PIF_PCI_DEVICE_ID) {
+		info.pciDeviceId = pciInfo.pciDeviceId;
+	}
+
+	if (pif & GPU_PIF_SUBSYS_DEVICE_ID) {
+		info.subSysDeviceId = pciInfo.pciSubSystemId;
+	}
+
+	if (pif & GPU_PIF_DOMAIN) {
+		info.domain = pciInfo.domain;
+	}
 
 	return info;
 }
-GpuModelInfo GpuProfiler::GetGpuModelInfo() {
+GpuModelInfo GpuProfiler::GetGpuModelInfo(GPU_MIF_FLAGS mif) {
 	GpuModelInfo info;
 
-	info.name = _strdup(GetGpuName().c_str());
-	info.driverName = _strdup(GetGpuDriverName().c_str());
-	info.vendor = _strdup(GetGpuVendor().c_str());
+	// Check the flags and assign only the requested info
+	if (mif & GPU_MIF_NAME) {
+		info.name = _strdup(GetGpuName().c_str());
+	}
 
-	info.driverVersion = GetGpuDriverVersion();
-	info.id = GetGpuID();
-	info.revision = GetGpuRevision();
+	if (mif & GPU_MIF_VENDOR) {
+		info.vendor = _strdup(GetGpuVendor().c_str());
+	}
+
+	if (mif & GPU_MIF_DRIVER_NAME) {
+		info.driverName = _strdup(GetGpuDriverName().c_str());
+	}
+
+	if (mif & GPU_MIF_DRIVER_VERSION) {
+		info.driverVersion = GetGpuDriverVersion();
+	}
+
+	if (mif & GPU_MIF_ID) {
+		info.id = GetGpuID();
+	}
+
+	if (mif & GPU_MIF_REVISION) {
+		info.revision = GetGpuRevision();
+	}
 
 	return info;
 }
-GpuUtilizationInfo GpuProfiler::GetGpuUtilizationInfo()	 {
+GpuUtilizationInfo GpuProfiler::GetGpuUtilizationInfo(GPU_UIF_FLAGS uif) {
 	GpuUtilizationInfo info;
 
 	nvmlDevice_t device;
@@ -285,7 +348,8 @@ GpuUtilizationInfo GpuProfiler::GetGpuUtilizationInfo()	 {
 	nvmlInit();
 
 	nvmlDeviceGetHandleByIndex(0, &device);
-	
+
+	// Retrieve utilization data
 	nvmlDeviceGetUtilizationRates(device, &utilization);
 	nvmlDeviceGetEncoderUtilization(device, &encUtil, &encInstCount);
 	nvmlDeviceGetDecoderUtilization(device, &decUtil, &decInstCount);
@@ -294,45 +358,73 @@ GpuUtilizationInfo GpuProfiler::GetGpuUtilizationInfo()	 {
 	nvmlDeviceGetMemoryInfo(device, &memInfo);
 	copyUtil = static_cast<UINT>((memInfo.used * 100) / memInfo.total);
 
-	info.utilization = utilization.gpu;
-	info.videoEncode = encUtil;
-	info.videoDecode = decUtil;
-	info.copy = copyUtil;
+	// Check the flags and assign only the requested info
+	if (uif & GPU_UIF_UTILIZATION) {
+		info.utilization = utilization.gpu;
+	}
 
-	return info;
-}
-GpuResolutionInfo GpuProfiler::GetGpuMaxResolutionInfo() {
-	DEVMODE dev = {};
+	if (uif & GPU_UIF_VIDEO_ENCODE) {
+		info.videoEncode = encUtil;
+	}
 
-	UINT num = 0;
+	if (uif & GPU_UIF_VIDEO_DECODE) {
+		info.videoDecode = decUtil;
+	}
 
-	GpuResolutionInfo info = {0};
-
-	while (EnumDisplaySettings(nullptr, num, &dev)) {
-		if (dev.dmPelsWidth > info.width || dev.dmPelsHeight > info.height) {
-			info.width = dev.dmPelsWidth;
-			info.height = dev.dmPelsHeight;
-		}
-		num++;
+	if (uif & GPU_UIF_COPY) {
+		info.copy = copyUtil;
 	}
 
 	return info;
 }
-GpuResolutionInfo GpuProfiler::GetGpuMinResolutionInfo() {
+GpuResolutionInfo GpuProfiler::GetGpuMaxResolutionInfo(GPU_RIF_FLAGS rif) {
 	DEVMODE dev = {};
 
 	UINT num = 0;
 
 	GpuResolutionInfo info;
-	info.width = UINT_MAX;
-	info.height = UINT_MAX;
+	UINT wid = 0;
+	UINT hei = 0;
 
 	while (EnumDisplaySettings(nullptr, num, &dev)) {
-		if (dev.dmPelsWidth < info.width || dev.dmPelsHeight < info.height) {
-			info.width = dev.dmPelsWidth;
-			info.height = dev.dmPelsHeight;
+		if (dev.dmPelsWidth > wid || dev.dmPelsHeight > hei) {
+			wid = dev.dmPelsWidth;
+			hei = dev.dmPelsHeight;
 		}
 		num++;
+	}
+
+	if (rif & GPU_RIF_WIDTH) {
+		info.width = wid;
+	}
+	if (rif & GPU_RIF_HEIGHT) {
+		info.height = hei;
+	}
+
+	return info;
+}
+GpuResolutionInfo GpuProfiler::GetGpuMinResolutionInfo(GPU_RIF_FLAGS rif) {
+	DEVMODE dev = {};
+
+	UINT num = 0;
+
+	GpuResolutionInfo info;
+	UINT wid = UINT_MAX;
+	UINT hei = UINT_MAX;
+
+	while (EnumDisplaySettings(nullptr, num, &dev)) {
+		if (dev.dmPelsWidth < wid || dev.dmPelsHeight < hei) {
+			wid = dev.dmPelsWidth;
+			hei = dev.dmPelsHeight;
+		}
+		num++;
+	}
+
+	if (rif & GPU_RIF_WIDTH) {
+		info.width = wid;
+	}
+	if (rif & GPU_RIF_HEIGHT) {
+		info.height = hei;
 	}
 
 	return info;

@@ -29,10 +29,11 @@ namespace ProfilingLib::Profilers {
 		UINT GetGpuID();
 		UINT GetGpuRevision();
 		
-		GpuPhysicalInfo GetGpuPhysicalInfo();
-		GpuModelInfo GetGpuModelInfo();
-		GpuUtilizationInfo GetGpuUtilizationInfo();
-		GpuResolutionInfo GetGpuMaxResolutionInfo();
-		GpuResolutionInfo GetGpuMinResolutionInfo();
+		GpuInfo GetGpuInfo(GPU_GIF_FLAGS gif, GPU_MIF_FLAGS mif, GPU_UIF_FLAGS uif, GPU_PIF_FLAGS pif, GPU_RIF_FLAGS rif);
+		GpuPhysicalInfo GetGpuPhysicalInfo(GPU_PIF_FLAGS pif);
+		GpuModelInfo GetGpuModelInfo(GPU_MIF_FLAGS mif);
+		GpuUtilizationInfo GetGpuUtilizationInfo(GPU_UIF_FLAGS uif);
+		GpuResolutionInfo GetGpuMaxResolutionInfo(GPU_RIF_FLAGS rif);
+		GpuResolutionInfo GetGpuMinResolutionInfo(GPU_RIF_FLAGS rif);
 	};
 }

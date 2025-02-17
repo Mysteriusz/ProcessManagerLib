@@ -69,3 +69,34 @@ extern "C" _declspec(dllexport) const UINT* GetGpuRevision() {
 
 	return &staticRes;
 }
+
+extern "C" _declspec(dllexport) const GpuInfo* GetGpuInfo(GPU_GIF_FLAGS gif, GPU_MIF_FLAGS mif, GPU_UIF_FLAGS uif, GPU_PIF_FLAGS pif, GPU_RIF_FLAGS rif) {
+	GpuInfo* res = new GpuInfo();
+	*res = Profiler::gpuProfiler.GetGpuInfo(gif, mif, uif, pif, rif);
+	return res;
+}
+extern "C" _declspec(dllexport) const GpuPhysicalInfo* GetGpuPhysicalInfo(GPU_PIF_FLAGS pif) {
+	GpuPhysicalInfo* res = new GpuPhysicalInfo();
+	*res = Profiler::gpuProfiler.GetGpuPhysicalInfo(pif);
+	return res;
+}
+extern "C" _declspec(dllexport) const GpuModelInfo* GetGpuModelInfo(GPU_MIF_FLAGS mif) {
+	GpuModelInfo* res = new GpuModelInfo();
+	*res = Profiler::gpuProfiler.GetGpuModelInfo(mif);
+	return res;
+}
+extern "C" _declspec(dllexport) const GpuUtilizationInfo* GetGpuUtilizationInfo(GPU_UIF_FLAGS uif) {
+	GpuUtilizationInfo* res = new GpuUtilizationInfo();
+	*res = Profiler::gpuProfiler.GetGpuUtilizationInfo(uif);
+	return res;
+}
+extern "C" _declspec(dllexport) const GpuResolutionInfo* GetGpuMaxResolutionInfo(GPU_RIF_FLAGS rif) {
+	GpuResolutionInfo* res = new GpuResolutionInfo();
+	*res = Profiler::gpuProfiler.GetGpuMaxResolutionInfo(rif);
+	return res;
+}
+extern "C" _declspec(dllexport) const GpuResolutionInfo* GetGpuMinResolutionInfo(GPU_RIF_FLAGS rif) {
+	GpuResolutionInfo* res = new GpuResolutionInfo();
+	*res = Profiler::gpuProfiler.GetGpuMinResolutionInfo(rif);
+	return res;
+}
