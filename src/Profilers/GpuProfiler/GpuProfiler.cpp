@@ -240,31 +240,34 @@ GpuInfo GpuProfiler::GetGpuInfo(GPU_GIF_FLAGS gif, GPU_MIF_FLAGS mif, GPU_UIF_FL
 	if (gif & GPU_GIF_DX_SUPPORT) {
 		info.dxSupport = _strdup(GetGpuDXVersion().c_str());
 	}
-	if (gif & GPU_GIF_MIN_RES) {
+	if (gif & GPU_GIF_VRAM_USAGE) {
+		info.vRamUsage = GetGpuVRamUsage();
+	}
+	if (gif & GPU_GIF_VRAM_SIZE) {
+		info.vRamSize = GetGpuVRamSize();
+	}
+	if (gif & GPU_GIF_MAX_RES_INFO) {
 		info.maxResInfo = GetGpuMaxResolutionInfo(rif);
 	}
-	if (gif & GPU_GIF_MAX_RES) {
+	if (gif & GPU_GIF_MIN_RES_INFO) {
 		info.maxResInfo = GetGpuMinResolutionInfo(rif);
 	}
 	if (gif & GPU_GIF_MODEL_INFO) {
 		info.modelInfo = GetGpuModelInfo(mif);
 	}
-	if (gif & GPU_GIF_UTILIZATION) {
+	if (gif & GPU_GIF_UTILIZATION_INFO) {
 		info.utilInfo = GetGpuUtilizationInfo(uif);
 	}
-
-	if (gif & GPU_GIF_VRAM_USAGE) {
-		info.vRamUsage = GetGpuVRamUsage();
+	if (gif & GPU_GIF_PHYSICAL_INFO) {
+		info.physInfo = GetGpuPhysicalInfo(pif);
 	}
-
-	if (gif & GPU_GIF_VRAM_SIZE) {
-		info.vRamSize = GetGpuVRamSize();
-	}
-
+	
 	return info;
 }
 GpuPhysicalInfo GpuProfiler::GetGpuPhysicalInfo(GPU_PIF_FLAGS pif) {
 	GpuPhysicalInfo info;
+
+	nvmlInit();
 
 	nvmlDevice_t device;
 	nvmlDeviceGetHandleByIndex(0, &device);
@@ -272,17 +275,16 @@ GpuPhysicalInfo GpuProfiler::GetGpuPhysicalInfo(GPU_PIF_FLAGS pif) {
 	nvmlPciInfo_t pciInfo;
 	nvmlDeviceGetPciInfo(device, &pciInfo);
 
-	// Check the flags and assign only the requested info
 	if (pif & GPU_PIF_BUS) {
 		info.bus = pciInfo.bus;
 	}
 
 	if (pif & GPU_PIF_BUS_ID) {
-		info.busId = pciInfo.busId;
+		info.busId = _strdup(pciInfo.busId);
 	}
 
 	if (pif & GPU_PIF_LEGACY_BUS_ID) {
-		info.legacyBusId = pciInfo.busIdLegacy;
+		info.legacyBusId = _strdup(pciInfo.busIdLegacy);
 	}
 
 	if (pif & GPU_PIF_DEVICE_ID) {

@@ -39,6 +39,7 @@ struct GpuInfo {
 	DOUBLE vRamSize = 0;
 
 	GpuUtilizationInfo utilInfo;
+	GpuPhysicalInfo physInfo;
 	GpuResolutionInfo maxResInfo;
 	GpuResolutionInfo minResInfo;
 	GpuModelInfo modelInfo;

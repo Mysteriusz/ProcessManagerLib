@@ -100,3 +100,16 @@ extern "C" _declspec(dllexport) const GpuResolutionInfo* GetGpuMinResolutionInfo
 	*res = Profiler::gpuProfiler.GetGpuMinResolutionInfo(rif);
 	return res;
 }
+
+extern "C" _declspec(dllexport) void FreeGpuInfo(GpuInfo* info) {
+	delete[] info->dxSupport;
+
+	delete[] info->physInfo.legacyBusId;
+	delete[] info->physInfo.busId;
+
+	delete[] info->modelInfo.driverName;
+	delete[] info->modelInfo.vendor;
+	delete[] info->modelInfo.name;
+
+	delete info;
+}
