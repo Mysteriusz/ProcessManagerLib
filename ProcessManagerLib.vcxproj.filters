@@ -37,6 +37,12 @@
     <Filter Include="Source Files\Profilers\GpuProfiler\Models">
       <UniqueIdentifier>{6d571859-dd35-4f28-a78e-6c56779cb97a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Profilers\RamProfiler">
+      <UniqueIdentifier>{c72aa4af-9b5b-4746-89b3-fc36b65410ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Profilers\RamProfiler\Models">
+      <UniqueIdentifier>{e103aaba-819d-4c01-b279-fcc7065d549a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Profilers\ProfilerExtern.cpp">
@@ -62,6 +68,12 @@
     </ClCompile>
     <ClCompile Include="src\Profilers\GpuProfiler\GpuProfilerExtern.cpp">
       <Filter>Source Files\Profilers\GpuProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Profilers\RamProfiler\RamProfiler.cpp">
+      <Filter>Source Files\Profilers\RamProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Profilers\RamProfiler\RamProfilerExtern.cpp">
+      <Filter>Source Files\Profilers\RamProfiler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -106,6 +118,15 @@
     </ClInclude>
     <ClInclude Include="src\Profilers\GpuProfiler\Models\GpuInfo.h">
       <Filter>Source Files\Profilers\GpuProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\RamProfiler\RamProfiler.h">
+      <Filter>Source Files\Profilers\RamProfiler</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\RamProfiler\Models\RamFlags.h">
+      <Filter>Source Files\Profilers\RamProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Profilers\RamProfiler\Models\RamInfo.h">
+      <Filter>Source Files\Profilers\RamProfiler\Models</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
