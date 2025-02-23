@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Actions\ProcessActions\ProcessActions.cpp" />
+    <ClCompile Include="src\Actions\ProcessActions\ProcessActionsExtern.cpp" />
     <ClCompile Include="src\Profilers\CpuProfiler\CpuProfiler.cpp" />
     <ClCompile Include="src\Profilers\CpuProfiler\CpuProfilerExtern.cpp" />
     <ClCompile Include="src\Profilers\GpuProfiler\GpuProfiler.cpp" />
@@ -31,6 +33,7 @@
     <ClCompile Include="src\Profilers\RamProfiler\RamProfilerExtern.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Actions\ProcessActions\ProcessActions.h" />
     <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuFlags.h" />
     <ClInclude Include="src\Profilers\CpuProfiler\Models\CpuInfo.h" />
     <ClInclude Include="src\Profilers\GpuProfiler\GpuProfiler.h" />
@@ -145,7 +148,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalOptions>/wd 4005 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\RamProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\RamProfiler\Models;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\include;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Actions\ProcessActions;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\RamProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\RamProfiler\Models;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\include;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\GpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\CpuProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler\Models;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\ProcessProfiler;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers\Windows;C:\Users\wixxx\source\repos\ProcessManager\ProcessManagerLib\src\Profilers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

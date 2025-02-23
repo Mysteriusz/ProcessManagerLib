@@ -43,6 +43,12 @@
     <Filter Include="Source Files\Profilers\RamProfiler\Models">
       <UniqueIdentifier>{e103aaba-819d-4c01-b279-fcc7065d549a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Actions">
+      <UniqueIdentifier>{d495c302-ed4a-406b-800f-0595f430c6c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Actions\ProcessActions">
+      <UniqueIdentifier>{fc2b6b14-f720-4301-a7d9-bd63921e1332}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Profilers\ProfilerExtern.cpp">
@@ -74,6 +80,12 @@
     </ClCompile>
     <ClCompile Include="src\Profilers\RamProfiler\RamProfilerExtern.cpp">
       <Filter>Source Files\Profilers\RamProfiler</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actions\ProcessActions\ProcessActions.cpp">
+      <Filter>Source Files\Actions\ProcessActions</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Actions\ProcessActions\ProcessActionsExtern.cpp">
+      <Filter>Source Files\Actions\ProcessActions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="src\Profilers\RamProfiler\Models\RamInfo.h">
       <Filter>Source Files\Profilers\RamProfiler\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Actions\ProcessActions\ProcessActions.h">
+      <Filter>Source Files\Actions\ProcessActions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
