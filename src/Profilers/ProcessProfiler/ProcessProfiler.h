@@ -20,7 +20,6 @@ namespace ProfilingLib::Profilers {
 		std::string GetProcessParentName(UINT& pid);
 		std::string GetProcessImageName(UINT& pid);
 		std::string GetProcessUser(UINT& pid);
-		std::string GetProcessPriority(UINT& pid);
 		std::string GetProcessFileVersion(UINT& pid);
 		std::string GetProcessArchitectureType(UINT& pid);
 		std::string GetProcessIntegrityLevel(UINT& pid);
@@ -29,8 +28,11 @@ namespace ProfilingLib::Profilers {
 		
 		UINT64 GetProcessPEB(UINT& pid);
 		UINT64 GetProcessCycleCount(UINT& pid);
+		UINT64 GetProcessAffinity(UINT& pid);
+
 		UINT GetProcessPPID(UINT& pid);
 		UINT GetProcessStatus(UINT& pid);
+		UINT GetProcessPriority(UINT& pid);
 
 		ProcessInfo GetProcessInfo(
 			PROCESS_PIF_FLAGS pif,

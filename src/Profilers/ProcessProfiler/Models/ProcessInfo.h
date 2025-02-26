@@ -43,6 +43,7 @@ struct ProcessIOInfo {
 struct ProcessCPUInfo {
     DOUBLE usage = 0;
     UINT64 cycles = 0;
+    UINT64 affinity = 0;
 };
 struct ProcessModuleInfo {
     char* name = nullptr;
@@ -62,16 +63,16 @@ struct ProcessInfo {
     char* parentProcessName = nullptr;
     char* user = nullptr;
     char* imageName = nullptr;
-    char* priority = nullptr;
     char* fileVersion = nullptr;
     char* integrityLevel = nullptr;
     char* architectureType = nullptr;
     char* cmd = nullptr;
     char* description = nullptr;
 
+    UINT64 peb = 0;
     UINT pid = 0;
     UINT ppid = 0;
-    UINT64 peb = 0;
+    UINT priority = 0;
 
     ProcessTimesInfo timesInfo;
     ProcessMemoryInfo memoryInfo;

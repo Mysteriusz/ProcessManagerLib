@@ -20,7 +20,7 @@ extern "C" _declspec(dllexport) void ResumeProcess(UINT pid) {
 extern "C" _declspec(dllexport) void InjectModule(UINT pid, const char* modulePath) {
 	ProcessActions::InjectModule(pid, modulePath);
 }
-extern "C" _declspec(dllexport) void SetAffinity(UINT pid, UINT affinity) {
+extern "C" _declspec(dllexport) void SetAffinity(UINT pid, UINT64 affinity) {
 	ProcessActions::SetAffinity(pid, affinity);
 }
 extern "C" _declspec(dllexport) void SetPriority(UINT pid, UINT priority) {

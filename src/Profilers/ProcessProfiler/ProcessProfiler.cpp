@@ -140,26 +140,6 @@ std::string ProcessProfiler::GetProcessUser(UINT& pid) {
     delete[] domain;
     return str;
 }
-std::string ProcessProfiler::GetProcessPriority(UINT& pid) {
-    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
-
-    switch (GetPriorityClass(pHandle)) {
-        case 0x00000100:
-            return "Read Time";
-        case 0x00000080:
-            return "High Priority";
-        case 0x00008000:
-            return "Above Normal";
-        case 0x00000020:
-            return "Normal";
-        case 0x00004000:
-            return "Below Normal";
-        case 0x00000040:
-            return "Idle";
-        default:
-            return "N/A";
-    }
-}
 std::string ProcessProfiler::GetProcessFileVersion(UINT& pid) {
     std::string imgName = GetProcessImageName(pid);
     std::wstring imgNameW = Profiler::StringToWideString(imgName.c_str());
@@ -327,6 +307,16 @@ UINT64 ProcessProfiler::GetProcessCycleCount(UINT& pid) {
 
     return count;
 }
+UINT64 ProcessProfiler::GetProcessAffinity(UINT& pid) {
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
+
+    UINT64 affinity = 0;
+    UINT64 sysAffinity = 0;
+
+    GetProcessAffinityMask(pHandle, &affinity, &sysAffinity);
+
+    return affinity;
+}
 
 UINT ProcessProfiler::GetProcessPPID(UINT& pid) {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -355,6 +345,11 @@ UINT ProcessProfiler::GetProcessStatus(UINT& pid) {
     }
 
     return exitCode;
+}
+UINT ProcessProfiler::GetProcessPriority(UINT& pid) {
+    HANDLE* pHandle = Profiler::GetProcessHandle(pid);
+
+    return GetPriorityClass(pHandle);
 }
 
 ProcessInfo ProcessProfiler::GetProcessInfo(
@@ -398,10 +393,7 @@ ProcessInfo ProcessProfiler::GetProcessInfo(
         strcpy_s(info.user, user.length() + 1, user.c_str());
     }
     if (pif & PROCESS_PIF_PRIORITY) {
-        const std::string& priority = GetProcessPriority(pid);
-        delete[] info.priority;
-        info.priority = new char[priority.length() + 1];
-        strcpy_s(info.priority, priority.length() + 1, priority.c_str());
+        info.priority = GetProcessPriority(pid);
     }
     if (pif & PROCESS_PIF_FILE_VERSION) {
         const std::string& fileVersion = GetProcessFileVersion(pid);
@@ -615,6 +607,8 @@ ProcessCPUInfo ProcessProfiler::GetProcessCurrentCPUInfo(PROCESS_CIF_FLAGS cif, 
         info.usage = percent;
     if (cif & PROCESS_CIF_CYCLES)
         info.cycles = GetProcessCycleCount(pid);
+    if (cif & PROCESS_CIF_AFFINITY)
+        info.affinity = GetProcessAffinity(pid);
 
     holder->prevNow = now;
     holder->prevSys = sys;

@@ -75,7 +75,7 @@ void ProcessActions::InjectModule(UINT pid, const std::string& modulePath) {
 	CloseHandle(pThread);
 	CloseHandle(pHandle);
 }
-void ProcessActions::SetAffinity(UINT pid, UINT affinity) {
+void ProcessActions::SetAffinity(UINT pid, UINT64 affinity) {
 	HANDLE pHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
 	SetProcessAffinityMask(pHandle, affinity);

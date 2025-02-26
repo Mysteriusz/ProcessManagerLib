@@ -13,7 +13,7 @@ namespace ProfilingLib::Actions {
 
 		static void InjectModule(UINT pid, const std::string& modulePath);
 
-		static void SetAffinity(UINT pid, UINT affinity);
+		static void SetAffinity(UINT pid, UINT64 affinity);
 		static void SetPriority(UINT pid, UINT priority);
 	private:
 		static std::string WideStringToString(const wchar_t* str) {

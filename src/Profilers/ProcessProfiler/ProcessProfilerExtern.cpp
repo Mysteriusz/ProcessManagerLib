@@ -28,12 +28,6 @@ extern "C" _declspec(dllexport) const char* GetProcessImageName(UINT pid) {
 
 	return staticRes.c_str();
 }
-extern "C" _declspec(dllexport) const char* GetProcessPriority(UINT pid) {
-	std::string res = Profiler::processProfiler.GetProcessPriority(pid);
-	static std::string staticRes; staticRes = res;
-
-	return staticRes.c_str();
-}
 extern "C" _declspec(dllexport) const char* GetProcessUser(UINT pid) {
 	std::string res = Profiler::processProfiler.GetProcessUser(pid);
 	static std::string staticRes; staticRes = res;
@@ -83,6 +77,12 @@ extern "C" _declspec(dllexport) const UINT64* GetProcessCycleCount(UINT pid) {
 
 	return &staticRes;
 }
+extern "C" _declspec(dllexport) const UINT64* GetProcessAffinity(UINT pid) {
+	UINT64 res = Profiler::processProfiler.GetProcessAffinity(pid);
+	static UINT64 staticRes; staticRes = res;
+
+	return &staticRes;
+}
 extern "C" _declspec(dllexport) const UINT* GetProcessPPID(UINT pid) {
 	UINT res = Profiler::processProfiler.GetProcessPPID(pid);
 	static UINT staticRes; staticRes = res;
@@ -91,6 +91,12 @@ extern "C" _declspec(dllexport) const UINT* GetProcessPPID(UINT pid) {
 }
 extern "C" _declspec(dllexport) const UINT* GetProcessStatus(UINT pid) {
 	UINT res = Profiler::processProfiler.GetProcessStatus(pid);
+	static UINT staticRes; staticRes = res;
+
+	return &staticRes;
+}
+extern "C" _declspec(dllexport) const UINT* GetProcessPriority(UINT pid) {
+	UINT res = Profiler::processProfiler.GetProcessPriority(pid);
 	static UINT staticRes; staticRes = res;
 
 	return &staticRes;
@@ -184,7 +190,6 @@ extern "C" __declspec(dllexport) void FreeProcessInfo(ProcessInfo* info) {
 	delete[] info->parentProcessName; info->parentProcessName = nullptr;
 	delete[] info->user; info->user = nullptr;
 	delete[] info->imageName; info->imageName = nullptr;
-	delete[] info->priority; info->priority = nullptr;
 	delete[] info->fileVersion; info->fileVersion = nullptr;
 	delete[] info->integrityLevel; info->integrityLevel = nullptr;
 	delete[] info->architectureType; info->architectureType = nullptr;
@@ -214,7 +219,6 @@ extern "C" __declspec(dllexport) void FreeProcessInfoArray(ProcessInfo* info, si
 		delete[] info[i].parentProcessName; info[i].parentProcessName = nullptr;
 		delete[] info[i].user; info[i].user = nullptr;
 		delete[] info[i].imageName; info[i].imageName = nullptr;
-		delete[] info[i].priority; info[i].priority = nullptr;
 		delete[] info[i].fileVersion; info[i].fileVersion = nullptr;
 		delete[] info[i].integrityLevel; info[i].integrityLevel = nullptr;
 		delete[] info[i].architectureType; info[i].architectureType = nullptr;
